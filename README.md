@@ -1,6 +1,6 @@
 # lls-manager
 
-A velocity plugin to manage server, such as whitelist, chatbridge, remenber last server, offline auth.
+A velocity plugin to manage server, such as whitelist, chat bridge, remember last server, offline auth.
 
 ## Command
 
