@@ -9,9 +9,13 @@ import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class LlsWhitelistCommand {
 
@@ -93,10 +97,23 @@ public class LlsWhitelistCommand {
                             context.getSource().sendMessage(Component.text("There are ")
                                     .append(Component.text(whitelist.size()).color(NamedTextColor.GREEN))
                                     .append(Component.text(" player in whitelist:")));
-                            for (String username : whitelist) {
+                            AtomicInteger maxLen = new AtomicInteger(1);
+                            whitelist.forEach(username -> maxLen.set(Math.max(username.length(), maxLen.get())));
+
+                            whitelist.forEach(username -> {
+                                HoverEvent<Component> hoverEvent = HoverEvent.showText(Component.text("Remove ")
+                                        .append(Component.text(username).color(NamedTextColor.GOLD))
+                                        .append(Component.text(" from whitelist.")));
+
+                                ClickEvent clickEvent = ClickEvent.suggestCommand("/lls_whitelist remove " + username);
+
                                 context.getSource().sendMessage(Component.text(" - ")
-                                        .append(Component.text(username).color(NamedTextColor.GOLD)));
-                            }
+                                        .append(Component.text(username).color(NamedTextColor.GOLD))
+                                        .append(Component.text(" " + String.join("", Collections.nCopies(maxLen.get() + 1 - username.length(), "-")) + " "))
+                                        .append(Component.text("[X]").color(NamedTextColor.GRAY)
+                                                .hoverEvent(hoverEvent)
+                                                .clickEvent(clickEvent)));
+                            });
                             return 1;
                         })
                 ).then(LiteralArgumentBuilder.<CommandSource>literal("on").executes(
