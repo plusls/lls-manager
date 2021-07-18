@@ -19,6 +19,7 @@ public class ServerConnectedEventHandler implements EventHandler<ServerConnected
     public void execute(ServerConnectedEvent event) {
         LlsPlayer llsPlayer = Objects.requireNonNull(llsManager.players.get(event.getPlayer().getUsername()));
         if (llsPlayer.status == LlsPlayer.Status.LOGGED_IN) {
+            // TODO 最后连接时间
             llsPlayer.setLastServerName(event.getServer().getServerInfo().getName());
         }
     }

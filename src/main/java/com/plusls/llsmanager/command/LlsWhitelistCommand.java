@@ -8,7 +8,7 @@ import com.plusls.llsmanager.LlsManager;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -33,19 +33,19 @@ public class LlsWhitelistCommand {
                                         context -> {
                                             String username = context.getArgument("username", String.class);
                                             if (llsManager.whitelist.query(username)) {
-                                                context.getSource().sendMessage(Component.text("User ").color(NamedTextColor.RED)
-                                                        .append(Component.text(username).color(NamedTextColor.GOLD))
-                                                        .append(Component.text(" already in whitelist.").color(NamedTextColor.RED)));
+                                                context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_whitelist.add.already_in_whitelist")
+                                                        .color(NamedTextColor.RED)
+                                                        .args(Component.text(username).color(NamedTextColor.GOLD)));
                                                 return 0;
                                             } else if (llsManager.whitelist.add(username)) {
-                                                context.getSource().sendMessage(Component.text("Add ").color(NamedTextColor.GREEN)
-                                                        .append(Component.text(username).color(NamedTextColor.GOLD))
-                                                        .append(Component.text(" to whitelist success!").color(NamedTextColor.GREEN)));
+                                                context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_whitelist.add.success")
+                                                        .color(NamedTextColor.GREEN)
+                                                        .args(Component.text(username).color(NamedTextColor.GOLD)));
                                                 return 1;
                                             } else {
-                                                context.getSource().sendMessage(Component.text("Add ").color(NamedTextColor.RED)
-                                                        .append(Component.text(username).color(NamedTextColor.GOLD))
-                                                        .append(Component.text(" to whitelist fail.").color(NamedTextColor.RED)));
+                                                context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_whitelist.add.failure")
+                                                        .color(NamedTextColor.RED)
+                                                        .args(Component.text(username).color(NamedTextColor.GOLD)));
                                                 return 0;
                                             }
                                         }
@@ -63,19 +63,19 @@ public class LlsWhitelistCommand {
                                         context -> {
                                             String username = context.getArgument("username", String.class);
                                             if (!llsManager.whitelist.query(username)) {
-                                                context.getSource().sendMessage(Component.text("User ").color(NamedTextColor.RED)
-                                                        .append(Component.text(username).color(NamedTextColor.GOLD))
-                                                        .append(Component.text(" not in whitelist.").color(NamedTextColor.RED)));
+                                                context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_whitelist.remove.not_in_whitelist")
+                                                        .color(NamedTextColor.RED)
+                                                        .args(Component.text(username).color(NamedTextColor.GOLD)));
                                                 return 0;
                                             } else if (llsManager.whitelist.remove(username)) {
-                                                context.getSource().sendMessage(Component.text("Remove ").color(NamedTextColor.GREEN)
-                                                        .append(Component.text(username).color(NamedTextColor.GOLD))
-                                                        .append(Component.text(" from whitelist success!").color(NamedTextColor.GREEN)));
+                                                context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_whitelist.remove.success")
+                                                        .color(NamedTextColor.GREEN)
+                                                        .args(Component.text(username).color(NamedTextColor.GOLD)));
                                                 return 1;
                                             } else {
-                                                context.getSource().sendMessage(Component.text("Remove ").color(NamedTextColor.RED)
-                                                        .append(Component.text(username).color(NamedTextColor.GOLD))
-                                                        .append(Component.text(" from whitelist fail.").color(NamedTextColor.RED)));
+                                                context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_whitelist.remove.failure")
+                                                        .color(NamedTextColor.RED)
+                                                        .args(Component.text(username).color(NamedTextColor.GOLD)));
                                                 return 0;
                                             }
                                         }
@@ -84,26 +84,24 @@ public class LlsWhitelistCommand {
                 ).then(LiteralArgumentBuilder.<CommandSource>literal("reload").executes(
                         context -> {
                             if (llsManager.whitelist.load()) {
-                                context.getSource().sendMessage(Component.text("Reload whitelist success!").color(NamedTextColor.GREEN));
+                                context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_whitelist.reload.success").color(NamedTextColor.GREEN));
                                 return 1;
                             } else {
-                                context.getSource().sendMessage(Component.text("Reload whitelist fail.").color(NamedTextColor.RED));
+                                context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_whitelist.reload.failure").color(NamedTextColor.RED));
                                 return 0;
                             }
                         })
                 ).then(LiteralArgumentBuilder.<CommandSource>literal("list").executes(
                         context -> {
                             List<String> whitelist = llsManager.whitelist.search("");
-                            context.getSource().sendMessage(Component.text("There are ")
-                                    .append(Component.text(whitelist.size()).color(NamedTextColor.GREEN))
-                                    .append(Component.text(" player in whitelist:")));
+                            context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_whitelist.list.count_info")
+                                    .args(Component.text(whitelist.size()).color(NamedTextColor.GREEN)));
                             AtomicInteger maxLen = new AtomicInteger(1);
                             whitelist.forEach(username -> maxLen.set(Math.max(username.length(), maxLen.get())));
 
                             whitelist.forEach(username -> {
-                                HoverEvent<Component> hoverEvent = HoverEvent.showText(Component.text("Remove ")
-                                        .append(Component.text(username).color(NamedTextColor.GOLD))
-                                        .append(Component.text(" from whitelist.")));
+                                HoverEvent<Component> hoverEvent = HoverEvent.showText(Component.translatable("lls-manager.command.lls_whitelist.list.hover_event_info")
+                                        .args(Component.text(username).color(NamedTextColor.GOLD)));
 
                                 ClickEvent clickEvent = ClickEvent.suggestCommand("/lls_whitelist remove " + username);
 
@@ -118,42 +116,51 @@ public class LlsWhitelistCommand {
                         })
                 ).then(LiteralArgumentBuilder.<CommandSource>literal("on").executes(
                         context -> {
-                            if (llsManager.whitelist.setStatus(true)) {
-                                context.getSource().sendMessage(Component.text("Set whitelist ")
-                                        .append(Component.text("on").color(NamedTextColor.GREEN))
-                                        .append(Component.text(" success."))
-                                );
+                            if (llsManager.whitelist.getStatus()) {
+                                context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_whitelist.set.already")
+                                        .color(NamedTextColor.RED)
+                                        .args(Component.translatable("lls-manager.command.lls_whitelist.on")));
+                                return 0;
+                            } else if (llsManager.whitelist.setStatus(true)) {
+                                context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_whitelist.set.success")
+                                        .args(Component.translatable("lls-manager.command.lls_whitelist.on").color(NamedTextColor.GREEN)));
                                 return 1;
                             } else {
-                                context.getSource().sendMessage(Component.text("Set whitelist on fail.").color(NamedTextColor.RED));
+                                context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_whitelist.set.failure")
+                                        .color(NamedTextColor.RED)
+                                        .args(Component.translatable("lls-manager.command.lls_whitelist.on")));
                                 return 0;
                             }
                         })
                 ).then(LiteralArgumentBuilder.<CommandSource>literal("off").executes(
                         context -> {
-                            if (llsManager.whitelist.setStatus(false)) {
-                                context.getSource().sendMessage(Component.text("Set whitelist ")
-                                        .append(Component.text("off").color(NamedTextColor.RED))
-                                        .append(Component.text(" success."))
-                                );
+                            if (!llsManager.whitelist.getStatus()) {
+                                context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_whitelist.set.already")
+                                        .color(NamedTextColor.RED)
+                                        .args(Component.translatable("lls-manager.command.lls_whitelist.off")));
+                                return 0;
+                            } else if (llsManager.whitelist.setStatus(false)) {
+                                context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_whitelist.set.success")
+                                        .args(Component.translatable("lls-manager.command.lls_whitelist.off").color(NamedTextColor.RED)));
                                 return 1;
                             } else {
-                                context.getSource().sendMessage(Component.text("Set whitelist off fail.").color(NamedTextColor.RED));
+                                context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_whitelist.set.failure")
+                                        .color(NamedTextColor.RED)
+                                        .args(Component.translatable("lls-manager.command.lls_whitelist.off")));
                                 return 0;
                             }
                         })
                 ).then(LiteralArgumentBuilder.<CommandSource>literal("status").executes(
                         context -> {
                             List<String> whitelist = llsManager.whitelist.search("");
-                            TextComponent textComponent = Component.text("There are ")
-                                    .append(Component.text(whitelist.size()).color(NamedTextColor.GREEN))
-                                    .append(Component.text(" player in whitelist, whitelist is "));
+                            TranslatableComponent statusTextComponent;
                             if (llsManager.whitelist.getStatus()) {
-                                textComponent = textComponent.append(Component.text("on.").color(NamedTextColor.GREEN));
+                                statusTextComponent = Component.translatable("lls-manager.command.lls_whitelist.on").color(NamedTextColor.GREEN);
                             } else {
-                                textComponent = textComponent.append(Component.text("off.").color(NamedTextColor.RED));
+                                statusTextComponent = Component.translatable("lls-manager.command.lls_whitelist.off").color(NamedTextColor.RED);
                             }
-                            context.getSource().sendMessage(textComponent);
+                            context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_whitelist.status.info")
+                                    .args(Component.text(whitelist.size()).color(NamedTextColor.GREEN), statusTextComponent));
                             return 1;
                         })
                 ).build();
