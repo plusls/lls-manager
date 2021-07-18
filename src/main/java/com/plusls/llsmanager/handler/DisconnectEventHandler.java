@@ -2,8 +2,12 @@ package com.plusls.llsmanager.handler;
 
 import com.plusls.llsmanager.LlsManager;
 import com.plusls.llsmanager.data.LlsPlayer;
+import com.plusls.llsmanager.util.BridgeUtil;
 import com.velocitypowered.api.event.EventHandler;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
+import com.velocitypowered.api.proxy.Player;
+
+import java.util.Date;
 
 public class DisconnectEventHandler implements EventHandler<DisconnectEvent> {
     private static LlsManager llsManager;
@@ -15,12 +19,16 @@ public class DisconnectEventHandler implements EventHandler<DisconnectEvent> {
 
     @Override
     public void execute(DisconnectEvent event) {
-        String username = event.getPlayer().getUsername();
-        LlsPlayer llsPlayer = llsManager.players.get(event.getPlayer().getUsername());
+        Player player = event.getPlayer();
+        String username = player.getUsername();
+        LlsPlayer llsPlayer = llsManager.players.get(username);
+
         if (llsPlayer != null) {
-            llsPlayer.count--;
-            if (llsPlayer.count == 0) {
-                llsManager.players.remove(username);
+            String serverName = llsPlayer.getLastServerName();
+            BridgeUtil.sendLeaveMessage(serverName, player);
+            // TODO 离开通知 API
+            if (!llsPlayer.setLastSeenTime(new Date())) {
+                llsManager.logger.error("Can't save the last seen time of player {}", username);
             }
         }
     }

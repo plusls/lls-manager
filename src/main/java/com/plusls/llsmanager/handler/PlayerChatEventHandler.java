@@ -1,14 +1,16 @@
 package com.plusls.llsmanager.handler;
 
 import com.plusls.llsmanager.LlsManager;
+import com.plusls.llsmanager.data.LlsPlayer;
+import com.plusls.llsmanager.util.BridgeUtil;
+import com.plusls.llsmanager.util.TextUtil;
 import com.velocitypowered.api.event.EventHandler;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
-import com.velocitypowered.api.proxy.server.RegisteredServer;
+import com.velocitypowered.api.proxy.Player;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.event.ClickEvent;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.TranslatableComponent;
+
+import java.util.Objects;
 
 public class PlayerChatEventHandler implements EventHandler<PlayerChatEvent> {
 
@@ -19,24 +21,29 @@ public class PlayerChatEventHandler implements EventHandler<PlayerChatEvent> {
         PlayerChatEventHandler.llsManager = llsManager;
     }
 
+
     @Override
     public void execute(PlayerChatEvent event) {
-        event.getPlayer().getCurrentServer().ifPresent((serverConnection) -> {
+        if (!llsManager.config.getBridgeChatMessage()) {
+            return;
+        }
+        Player player = event.getPlayer();
+        String username = player.getUsername();
+        String message = event.getMessage();
+
+        LlsPlayer llsPlayer = Objects.requireNonNull(llsManager.players.get(username));
+        String channel = llsPlayer.getChannel();
+        if (!llsManager.config.getBridgeMessageChannel().contains(channel)) {
+            return;
+        }
+        player.getCurrentServer().ifPresent((serverConnection) -> {
             String serverName = serverConnection.getServerInfo().getName();
-            TextComponent textComponent = Component.text("[")
-                    .append(Component.text(serverName)
-                            .color(NamedTextColor.GOLD)
-                            .decoration(TextDecoration.BOLD, true)
-                            .clickEvent(ClickEvent.suggestCommand("/server " + serverName)))
-                    .append(Component.text("] <"))
-                    .append(Component.text(event.getPlayer().getUsername()).color(NamedTextColor.GREEN))
-                    .append(Component.text("> "))
-                    .append(Component.text(event.getMessage()));
-            for (RegisteredServer server : llsManager.server.getAllServers()) {
-                if (server != serverConnection.getServer()) {
-                    server.sendMessage(textComponent);
-                }
-            }
+            TranslatableComponent translatableComponent = Component.translatable("lls-manager.bridge.chat.format")
+                    .args(TextUtil.getServerNameComponent(serverName),
+                            TextUtil.getUsernameComponent(username),
+                            Component.text(message));
+            BridgeUtil.sendMessageToAllPlayer(translatableComponent, llsManager.config.getChatMessageChannelList(), (playerToSend, serverToSend) -> serverToSend.getServerInfo().getName().equals(serverName));
+            BridgeUtil.bridgeMessage(message, username, channel);
         });
     }
 }

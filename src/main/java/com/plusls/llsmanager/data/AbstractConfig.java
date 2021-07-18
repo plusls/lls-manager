@@ -24,7 +24,7 @@ public abstract class AbstractConfig<T> {
 
     protected abstract void setData(T data);
 
-    protected boolean save() {
+    public boolean save() {
         if (!Files.exists(path)) {
             try {
                 Files.createFile(path);

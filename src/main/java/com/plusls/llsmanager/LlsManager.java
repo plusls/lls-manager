@@ -3,14 +3,18 @@ package com.plusls.llsmanager;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
+import com.plusls.llsmanager.command.LlsChannelCommand;
+import com.plusls.llsmanager.command.LlsSeenCommand;
 import com.plusls.llsmanager.command.LlsWhitelistCommand;
+import com.plusls.llsmanager.data.Config;
 import com.plusls.llsmanager.data.LlsPlayer;
 import com.plusls.llsmanager.data.LlsWhitelist;
 import com.plusls.llsmanager.handler.*;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.event.Subscribe;
-import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
+import com.velocitypowered.api.event.proxy.ProxyReloadEvent;
+import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -26,8 +30,12 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.*;
-import java.util.*;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.ResourceBundle;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 @Plugin(
         id = "lls-manager",
@@ -59,6 +67,10 @@ public class LlsManager {
 
     public LlsWhitelist whitelist;
 
+    public Config config;
+
+    public ConcurrentLinkedQueue<String> playerList = new ConcurrentLinkedQueue<>();
+
     @Nullable
     public static LlsManager getInstance() {
         return instance;
@@ -71,6 +83,32 @@ public class LlsManager {
     @Subscribe
     public void onProxyInitialization(ProxyInitializeEvent event) {
         instance = this;
+        load();
+        // 注册本地化字符
+        registerTranslations();
+        PlayerChooseInitialServerEventHandler.init(this);
+        ServerConnectedEventHandler.init(this);
+        PlayerChatEventHandler.init(this);
+        PreLoginEventHandler.init(this);
+        PostLoginEventHandler.init(this);
+        DisconnectEventHandler.init(this);
+        LlsWhitelistCommand.register(this);
+        LlsSeenCommand.register(this);
+        LlsChannelCommand.register(this);
+        logger.info("Lls-Manager load success!");
+    }
+
+    @Subscribe
+    public void proxyReloadEventHandler(ProxyReloadEvent event) {
+        load();
+    }
+
+    @Subscribe
+    public void proxyProxyShutdownEventHandler(ProxyShutdownEvent event) {
+    }
+
+    private void load() {
+        // 检查并创建 player 目录
         Path playerDataDirPath = dataFolderPath.resolve("player");
         if (!Files.exists(playerDataDirPath)) {
             try {
@@ -78,35 +116,44 @@ public class LlsManager {
             } catch (IOException e) {
                 e.printStackTrace();
                 LlsManager.logger().error("Lls-Manager load fail! createDirectories {} fail!!", playerDataDirPath);
-                throw new RuntimeException("Lls-Manager init fail.");
+                throw new IllegalStateException("Lls-Manager init fail.");
             }
         } else if (!Files.isDirectory(playerDataDirPath)) {
             logger.error("Lls-Manager load fail! {} is not a directory!", playerDataDirPath);
-            throw new RuntimeException("Lls-Manager init fail.");
+            throw new IllegalStateException("Lls-Manager init fail.");
         }
 
+        // 加载 config
+        config = new Config(dataFolderPath);
+        if (!config.load()) {
+            logger.error("Lls-Manager load config fail!");
+            throw new IllegalStateException("Lls-Manager init fail.");
+        }
+        // 同步配置文件为最新的
+        config.save();
+
+        // 加载白名单
         whitelist = new LlsWhitelist(dataFolderPath);
-        logger.info("log: {}", logger);
         if (!whitelist.load()) {
             logger.error("Lls-Manager load whitelist fail!");
-            throw new RuntimeException("Lls-Manager init fail.");
+            throw new IllegalStateException("Lls-Manager init fail.");
         }
 
-        registerTranslations();
-        PlayerChooseInitialServerEventHandler.init(this);
-        ServerConnectedEventHandler.init(this);
-        PlayerChatEventHandler.init(this);
-        PreLoginEventHandler.init(this);
-        PostLoginEventHandler.init(this);
-        ProxyReloadEventHandle.init(this);
-        DisconnectEventHandler.init(this);
-        LlsWhitelistCommand.register(this);
-        logger.info("Lls-Manager load success!");
+        // 初始化用户列表
+        try {
+            Files.list(dataFolderPath.resolve("player")).forEach(path -> {
+                String filename = path.getFileName().toString();
+                playerList.add(filename.substring(0, filename.length() - 5));
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new IllegalStateException(e);
+        }
     }
 
-    private static Path getl10nPath() {
+    private static Path getL10nPath() {
         Path l10nPath;
-        URL knownResource =  LlsManager.class.getClassLoader().getResource("l10n/messages.properties");
+        URL knownResource = LlsManager.class.getClassLoader().getResource("l10n/messages.properties");
 
         if (knownResource == null) {
             throw new IllegalStateException("messages.properties does not exist, don't know where we are");
@@ -154,7 +201,7 @@ public class LlsManager {
         translationRegistry.defaultLocale(Locale.US);
 
         // get l10nPath
-        Path l10nPath = getl10nPath();
+        Path l10nPath = getL10nPath();
 
         try {
             Files.walk(l10nPath).forEach(file -> {

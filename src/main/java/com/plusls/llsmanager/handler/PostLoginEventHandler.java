@@ -18,7 +18,7 @@ public class PostLoginEventHandler implements EventHandler<PostLoginEvent> {
     // TODO 支持盗版验证
     @Override
     public void execute(PostLoginEvent event) {
-        LlsPlayer llsPlayer = llsManager.players.get(event.getPlayer().getUsername());
-        Objects.requireNonNull(llsPlayer).status = LlsPlayer.Status.LOGGED_IN;
+        LlsPlayer llsPlayer = Objects.requireNonNull(llsManager.players.get(event.getPlayer().getUsername()));
+        llsPlayer.status = LlsPlayer.Status.LOGGED_IN;
     }
 }

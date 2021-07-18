@@ -15,7 +15,6 @@ public class LlsWhitelist extends AbstractConfig<LlsWhitelist.WhitelistData> {
 
     public static class WhitelistData {
         public ConcurrentLinkedQueue<String> whiteList = new ConcurrentLinkedQueue<>();
-        public boolean status = false;
     }
 
     public boolean query(String username) {
@@ -28,15 +27,6 @@ public class LlsWhitelist extends AbstractConfig<LlsWhitelist.WhitelistData> {
         }
         LlsManager.logger().error("whiteList.add error.");
         return false;
-    }
-
-    public boolean getStatus() {
-        return whitelistData.status;
-    }
-
-    public boolean setStatus(boolean status) {
-        whitelistData.status = status;
-        return save();
     }
 
     public boolean remove(String username) {
