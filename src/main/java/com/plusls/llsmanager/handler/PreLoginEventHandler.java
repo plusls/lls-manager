@@ -15,6 +15,7 @@ import org.geysermc.floodgate.api.player.FloodgatePlayer;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class PreLoginEventHandler implements EventHandler<PreLoginEvent> {
     private static LlsManager llsManager;
@@ -50,15 +51,20 @@ public class PreLoginEventHandler implements EventHandler<PreLoginEvent> {
                 onlineUserList.add(player.getUsername());
             }
         }
-        for (String llsPlayerName : llsManager.players.keySet()) {
-            if (!onlineUserList.contains(llsPlayerName)) {
-                removeList.add(llsPlayerName);
+        for (Map.Entry<String, LlsPlayer> entry : llsManager.players.entrySet()) {
+            if (!onlineUserList.contains(entry.getKey())) {
+                removeList.add(entry.getKey());
+                // 移除垃圾用户
+                if (!entry.getValue().hasUser()) {
+                    llsManager.playerList.remove(entry.getKey());
+                }
             }
         }
         for (String removeUsername : removeList) {
             llsManager.players.remove(removeUsername);
         }
 
+        boolean isFloodgateUser = false;
         // 在安装了 Floodgate 的情况下
         if (llsManager.hasFloodgate) {
             try {
@@ -69,6 +75,7 @@ public class PreLoginEventHandler implements EventHandler<PreLoginEvent> {
                 // 只考虑链接了的情况
                 if (player != null && player.isLinked()) {
                     username = player.getLinkedPlayer().getJavaUsername();
+                    isFloodgateUser = true;
                 }
             } catch (IllegalAccessException e) {
                 // 正常不会走到这，反射时已经给过权限了
@@ -88,17 +95,42 @@ public class PreLoginEventHandler implements EventHandler<PreLoginEvent> {
                     event.setResult(PreLoginEvent.PreLoginComponentResult.denied(Component.text("Load player data fail!")));
                     return;
                 }
-                player.status = LlsPlayer.Status.NEED_LOGIN;
+                if (player.getOnlineMode()) {
+                    player.status = LlsPlayer.Status.ONLINE_USER;
+                } else if (player.getPassword().equals("")) {
+                    player.status = LlsPlayer.Status.NEED_REGISTER;
+                } else {
+                    player.status = LlsPlayer.Status.NEED_LOGIN;
+                }
 
             } else {
-                // TODO 支持盗版验证
-                player.init();
+                if (llsManager.config.getDefaultOnlineMode()) {
+                    player.status = LlsPlayer.Status.ONLINE_USER;
+                } else {
+                    player.status = LlsPlayer.Status.NEED_REGISTER;
+                }
+                // 在登陆服务器后 ServerConnectedEvent 时会保存最后登陆的服务器，会将用户配置写入 json
+                // 因此在这无需保存用户信息
+                // 主要是考虑到开启盗版验证并且不开白名单的情况下，可能会有很多垃圾用户连接，产生很多垃圾数据
+                // 因此设置为登陆成功后或者注册成功才能留下用户数据
+                // player.save();
                 llsManager.playerList.add(username);
             }
             llsManager.players.put(username, player);
+        } else {
+            // 一个帐号登陆多次服务器的情况
+            // 主要是处于安全考虑，需要把盗版用户设置为未登陆
+            if (!player.getOnlineMode() && player.getPassword().equals("")) {
+                player.status = LlsPlayer.Status.NEED_REGISTER;
+            } else {
+                player.status = LlsPlayer.Status.NEED_LOGIN;
+            }
         }
         if (!player.getOnlineMode()) {
             event.setResult(PreLoginEvent.PreLoginComponentResult.forceOfflineMode());
+        } else if (!isFloodgateUser) {
+            // Floodgate 会强制使用盗版验证
+            event.setResult(PreLoginEvent.PreLoginComponentResult.forceOnlineMode());
         }
     }
 }

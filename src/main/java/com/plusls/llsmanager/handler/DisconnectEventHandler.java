@@ -27,8 +27,10 @@ public class DisconnectEventHandler implements EventHandler<DisconnectEvent> {
             String serverName = llsPlayer.getLastServerName();
             BridgeUtil.sendLeaveMessage(serverName, player);
             // TODO 离开通知 API
-            if (!llsPlayer.setLastSeenTime(new Date())) {
-                llsManager.logger.error("Can't save the last seen time of player {}", username);
+            if (llsPlayer.status == LlsPlayer.Status.LOGGED_IN || llsPlayer.status == LlsPlayer.Status.ONLINE_USER) {
+                if (!llsPlayer.setLastSeenTime(new Date())) {
+                    llsManager.logger.error("Can't save the last seen time of player {}", username);
+                }
             }
         }
     }

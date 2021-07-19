@@ -103,6 +103,7 @@ public class LlsManager {
         PreLoginEventHandler.init(this);
         PostLoginEventHandler.init(this);
         DisconnectEventHandler.init(this);
+        ServerPreConnectEventHandler.init(this);
         LlsWhitelistCommand.register(this);
         LlsSeenCommand.register(this);
         LlsChannelCommand.register(this);

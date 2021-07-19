@@ -24,6 +24,7 @@ public class LlsPlayer extends AbstractConfig<LlsPlayer.LlsPlayerData> {
     public static List<String> channelList = Arrays.asList(SERVER, SUB_SERVER, GLOBAL);
 
     public enum Status {
+        ONLINE_USER,
         LOGGED_IN,
         NEED_LOGIN,
         NEED_REGISTER
@@ -35,17 +36,11 @@ public class LlsPlayer extends AbstractConfig<LlsPlayer.LlsPlayerData> {
 
 
     public static class LlsPlayerData {
-        public boolean onlineMode = true;
+        public boolean onlineMode = Objects.requireNonNull(LlsManager.getInstance()).config.getDefaultOnlineMode();
         public String password = "";
         public String lastServerName = "";
         public String channel = Objects.requireNonNull(LlsManager.getInstance()).config.getDefaultChannel();
         public Date lastSeenTime = new Date();
-    }
-
-    // TODO
-    public void init() {
-        this.status = Status.NEED_LOGIN;
-        save();
     }
 
     public boolean hasUser() {

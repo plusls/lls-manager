@@ -26,16 +26,17 @@ public class ServerConnectedEventHandler implements EventHandler<ServerConnected
         String serverName = server.getServerInfo().getName();
         LlsPlayer llsPlayer = Objects.requireNonNull(llsManager.players.get(username));
 
-        // 只处理登陆成功了的玩家（排除掉盗版未登陆的）
-        if (llsPlayer.status == LlsPlayer.Status.LOGGED_IN) {
-            event.getPreviousServer().ifPresent(registeredServer -> {
-                String previousServerName = registeredServer.getServerInfo().getName();
-                BridgeUtil.sendLeaveMessage(previousServerName, player);
-                // TODO 通知 API
-            });
-            BridgeUtil.sendJoinMessage(serverName, player);
-            // TODO 通知 API
 
+        event.getPreviousServer().ifPresent(registeredServer -> {
+            String previousServerName = registeredServer.getServerInfo().getName();
+            BridgeUtil.sendLeaveMessage(previousServerName, player);
+            // TODO 通知 API
+        });
+        BridgeUtil.sendJoinMessage(serverName, player);
+        // TODO 通知 API
+
+        if (llsPlayer.status == LlsPlayer.Status.LOGGED_IN ||llsPlayer.status == LlsPlayer.Status.ONLINE_USER) {
+            // 登陆了的用户才会记录
             if (!llsPlayer.setLastServerName(serverName)) {
                 LlsManager.logger().error("{} setLastServerName to {} fail.", username, serverName);
             }

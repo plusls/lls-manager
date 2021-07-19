@@ -1,5 +1,15 @@
+buildscript {
+    repositories {
+        gradlePluginPortal()
+    }
+    dependencies {
+        classpath 'gradle.plugin.com.github.jengelman.gradle.plugins:shadow:7.0.0'
+    }
+}
+
 plugins {
     id 'java'
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
 }
 
 group = 'com.plusls'
@@ -33,6 +43,8 @@ dependencies {
     annotationProcessor "com.velocitypowered:velocity-api:${project.velocity_version}"
     compileOnly "org.geysermc.floodgate:api:${project.floodgate_version}"
     compileOnly "io.netty:netty-all:${project.netty_version}"
+    // bcrypt
+    implementation "org.mindrot:jbcrypt:${project.jbcrypt_version}"
 }
 
 import org.apache.tools.ant.filters.ReplaceTokens
@@ -45,3 +57,5 @@ task processSources(type: Sync) {
 }
 
 compileJava.source = processSources.outputs
+
+build.dependsOn(shadowJar)

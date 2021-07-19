@@ -30,6 +30,8 @@ public class Config extends AbstractConfig<Config.ConfigData> {
         public boolean bridgePlayerLeaveMessage = false;
         // 白名单
         public boolean whitelist = false;
+        // 默认为在线模式
+        public boolean defaultOnlineMode = true;
         // 默认聊天频道
         public String defaultChannel = LlsPlayer.SERVER;
         // 离线认证服务器名字
@@ -53,6 +55,15 @@ public class Config extends AbstractConfig<Config.ConfigData> {
             joinMessageChannelList.add(LlsPlayer.SERVER);
             joinMessageChannelList.add(LlsPlayer.GLOBAL);
         }
+    }
+
+    public boolean getDefaultOnlineMode() {
+        return config.defaultOnlineMode;
+    }
+
+    public boolean getDefaultOnlineMode(boolean defaultOnlineMode) {
+        config.defaultOnlineMode = defaultOnlineMode;
+        return save();
     }
 
     public String getAuthServerName() {
