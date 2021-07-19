@@ -97,7 +97,7 @@ public class LlsSeenCommand {
                                         }
                                         TranslatableComponent offlineText = Component.translatable("lls-manager.command.lls_seen.offline")
                                                 .args(TextUtil.getUsernameComponent(username),
-                                                        Component.text(sdf.format(currentDate)).color(NamedTextColor.YELLOW), diffTextBuilder.build());
+                                                        Component.text(sdf.format(llsPlayer.getLastSeenTime().getTime())).color(NamedTextColor.YELLOW), diffTextBuilder.build());
                                         commandSource.sendMessage(offlineText);
                                     } else {
                                         TranslatableComponent userNotFoundText = Component.translatable("lls-manager.command.lls_seen.not_found")

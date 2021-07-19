@@ -13,7 +13,7 @@ plugins {
 }
 
 group = 'com.plusls'
-version = '1.0-SNAPSHOT'
+version = project.plugin_version
 
 sourceCompatibility = '16'
 targetCompatibility = '16'
