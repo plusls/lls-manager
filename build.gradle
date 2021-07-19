@@ -23,14 +23,16 @@ repositories {
         url = 'https://repo.spongepowered.org/maven'
     }
     maven {
-        name = 'viaversion-repo'
-        url = 'https://repo.viaversion.com/'
+        name = 'opencollab-snapshot'
+        url = 'https://repo.opencollab.dev/maven-snapshots/'
     }
 }
 
 dependencies {
     compileOnly "com.velocitypowered:velocity-api:${project.velocity_version}"
     annotationProcessor "com.velocitypowered:velocity-api:${project.velocity_version}"
+    compileOnly "org.geysermc.floodgate:api:${project.floodgate_version}"
+    compileOnly "io.netty:netty-all:${project.netty_version}"
 }
 
 import org.apache.tools.ant.filters.ReplaceTokens

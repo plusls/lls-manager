@@ -3,6 +3,7 @@ package com.plusls.llsmanager;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.plusls.llsmanager.command.LlsChannelCommand;
 import com.plusls.llsmanager.command.LlsSeenCommand;
 import com.plusls.llsmanager.command.LlsWhitelistCommand;
@@ -15,7 +16,9 @@ import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyReloadEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
+import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.plugin.Plugin;
+import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import net.kyori.adventure.key.Key;
@@ -43,7 +46,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
         version = "@version@",
         description = "Lls Manager",
         url = "https://github/plusls/lls-manager",
-        authors = {"plusls"}
+        authors = {"plusls"},
+        dependencies = {@Dependency(id = "floodgate", optional = true)}
 )
 public class LlsManager {
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -78,6 +82,13 @@ public class LlsManager {
 
     public static Logger logger() {
         return Objects.requireNonNull(getInstance()).logger;
+    }
+
+    public boolean hasFloodgate = false;
+
+    @Inject(optional = true)
+    public void initFloodgate(@Named("floodgate") PluginContainer luckPermsContainer) {
+        this.hasFloodgate = luckPermsContainer != null;
     }
 
     @Subscribe

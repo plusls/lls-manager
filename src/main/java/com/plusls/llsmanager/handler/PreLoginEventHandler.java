@@ -6,14 +6,33 @@ import com.velocitypowered.api.event.EventHandler;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import io.netty.channel.Channel;
+import io.netty.util.AttributeKey;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.geysermc.floodgate.api.player.FloodgatePlayer;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
 public class PreLoginEventHandler implements EventHandler<PreLoginEvent> {
     private static LlsManager llsManager;
+    private static Field INITIAL_MINECRAFT_CONNECTION;
+    private static Field CHANNEL;
+
+    static {
+        try {
+            Class<?> initialConnection = Class.forName("com.velocitypowered.proxy.connection.client.InitialInboundConnection");
+            Class<?> minecraftConnection = Class.forName("com.velocitypowered.proxy.connection.MinecraftConnection");
+            INITIAL_MINECRAFT_CONNECTION = initialConnection.getDeclaredField("connection");
+            CHANNEL = minecraftConnection.getDeclaredField("channel");
+            INITIAL_MINECRAFT_CONNECTION.setAccessible(true);
+            CHANNEL.setAccessible(true);
+        } catch (ClassNotFoundException | NoSuchFieldException e) {
+            e.printStackTrace();
+        }
+    }
 
     public static void init(LlsManager llsManager) {
         llsManager.server.getEventManager().register(llsManager, PreLoginEvent.class, new PreLoginEventHandler());
@@ -39,6 +58,24 @@ public class PreLoginEventHandler implements EventHandler<PreLoginEvent> {
         for (String removeUsername : removeList) {
             llsManager.players.remove(removeUsername);
         }
+
+        // 在安装了 Floodgate 的情况下
+        if (llsManager.hasFloodgate) {
+            try {
+                Object mcConnection = INITIAL_MINECRAFT_CONNECTION.get(event.getConnection());
+                Channel channel = (Channel) CHANNEL.get(mcConnection);
+
+                FloodgatePlayer player = (FloodgatePlayer)channel.attr(AttributeKey.valueOf("floodgate-player")).get();
+                // 只考虑链接了的情况
+                if (player != null && player.isLinked()) {
+                    username = player.getLinkedPlayer().getJavaUsername();
+                }
+            } catch (IllegalAccessException e) {
+                // 正常不会走到这，反射时已经给过权限了
+                e.printStackTrace();
+            }
+        }
+
         if (llsManager.config.getWhitelist() && !llsManager.whitelist.query(username)) {
             event.setResult(PreLoginEvent.PreLoginComponentResult.denied(Component.translatable("multiplayer.disconnect.not_whitelisted").color(NamedTextColor.RED)));
             return;
