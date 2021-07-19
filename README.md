@@ -14,4 +14,7 @@ need permission `lls-manager.admin`
 /lls_whitelist status
 /lls_whitelist on
 /lls_whitelist off
+/lls_seen <username>
+/lls_channel
+/lls_channel <channel>
 ```
