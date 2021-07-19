@@ -4,8 +4,6 @@ import com.plusls.llsmanager.LlsManager;
 import com.plusls.llsmanager.data.LlsPlayer;
 import com.velocitypowered.api.event.EventHandler;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
-import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.server.RegisteredServer;
 import io.netty.channel.Channel;
 import io.netty.util.AttributeKey;
 import net.kyori.adventure.text.Component;
@@ -13,11 +11,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.geysermc.floodgate.api.player.FloodgatePlayer;
 
 import java.lang.reflect.Field;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class PreLoginEventHandler implements EventHandler<PreLoginEvent> {
     private static LlsManager llsManager;
