@@ -25,9 +25,9 @@ public class ServerPreConnectEventHandler implements EventHandler<ServerPreConne
         RegisteredServer server;
         server = result.getServer().get();
 
-        LlsPlayer llsPlayer = llsManager.onlinePlayers.get(event.getPlayer().getUsername());
+        LlsPlayer llsPlayer = llsManager.players.get(event.getPlayer().getRemoteAddress());
 
-        if (llsPlayer == null && !server.getServerInfo().getName().equals(llsManager.config.getAuthServerName())) {
+        if (llsPlayer.status != LlsPlayer.Status.LOGGED_IN && !server.getServerInfo().getName().equals(llsManager.config.getAuthServerName())) {
             event.getPlayer().disconnect(Component.text("Can't connect to auth server. Please contact server admin."));
             event.setResult(ServerPreConnectEvent.ServerResult.denied());
         }

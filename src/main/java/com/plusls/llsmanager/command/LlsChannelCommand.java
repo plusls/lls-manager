@@ -46,8 +46,7 @@ public class LlsChannelCommand {
                                         return 0;
                                     }
                                     if (commandSource instanceof Player player) {
-                                        String username = player.getUsername();
-                                        LlsPlayer llsPlayer = llsManager.onlinePlayers.get(username);
+                                        LlsPlayer llsPlayer = llsManager.players.get(player.getRemoteAddress());
                                         if (llsPlayer.getChannel().equals(channel)) {
                                             commandSource.sendMessage(Component.translatable("lls-manager.command.lls_seen.add.already_in_channel")
                                                     .color(NamedTextColor.RED)
@@ -61,7 +60,7 @@ public class LlsChannelCommand {
                                                     .args(TextUtil.getChannelComponent(channel))
                                             );
                                             BridgeUtil.sendMessageToAllPlayer(Component.translatable("lls-manager.command.lls_seen.global_message")
-                                                            .args(TextUtil.getUsernameComponent(username), TextUtil.getChannelComponent(channel)),
+                                                            .args(TextUtil.getUsernameComponent(player.getUsername()), TextUtil.getChannelComponent(channel)),
                                                     LlsPlayer.channelList,
                                                     (playerToSend, serverToSend) -> player == playerToSend ||
                                                             serverToSend.getServerInfo().getName().equals(llsManager.config.getAuthServerName()));
@@ -87,7 +86,7 @@ public class LlsChannelCommand {
                             LlsPlayer.channelList.forEach(name -> channelMap.put(name, new ArrayList<>()));
                             for (Player player : llsManager.server.getAllPlayers()) {
                                 String username = player.getUsername();
-                                LlsPlayer llsPlayer = llsManager.onlinePlayers.get(player.getUsername());
+                                LlsPlayer llsPlayer = llsManager.players.get(player.getRemoteAddress());
                                 // 在加载配置时会检查 channel 是否合法，因此这里不会出问题
                                 channelMap.get(llsPlayer.getChannel()).add(username);
                             }

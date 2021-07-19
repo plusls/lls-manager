@@ -8,8 +8,6 @@ import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 
-import java.util.Objects;
-
 public class ServerConnectedEventHandler implements EventHandler<ServerConnectedEvent> {
     private static LlsManager llsManager;
 
@@ -24,10 +22,7 @@ public class ServerConnectedEventHandler implements EventHandler<ServerConnected
         String username = player.getUsername();
         RegisteredServer server = event.getServer();
         String serverName = server.getServerInfo().getName();
-        LlsPlayer llsPlayer = llsManager.onlinePlayers.get(username);
-        if (llsPlayer == null) {
-            llsPlayer = Objects.requireNonNull(llsManager.preLoginPlayers).get(player.getRemoteAddress());
-        }
+        LlsPlayer llsPlayer = llsManager.players.get(player.getRemoteAddress());
 
         event.getPreviousServer().ifPresent(registeredServer -> {
             String previousServerName = registeredServer.getServerInfo().getName();
@@ -37,7 +32,7 @@ public class ServerConnectedEventHandler implements EventHandler<ServerConnected
         BridgeUtil.sendJoinMessage(serverName, player);
         // TODO 通知 API
 
-        if (llsPlayer.status == LlsPlayer.Status.LOGGED_IN || llsPlayer.status == LlsPlayer.Status.ONLINE_USER) {
+        if (llsPlayer.status == LlsPlayer.Status.LOGGED_IN) {
             // 登陆了的用户才会记录
             if (!llsPlayer.setLastServerName(serverName)) {
                 LlsManager.logger().error("{} setLastServerName to {} fail.", username, serverName);

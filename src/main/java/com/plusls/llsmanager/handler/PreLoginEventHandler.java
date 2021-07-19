@@ -46,12 +46,12 @@ public class PreLoginEventHandler implements EventHandler<PreLoginEvent> {
         List<InetSocketAddress> onlineUserList = new ArrayList<>();
         List<InetSocketAddress> removeList = new ArrayList<>();
         llsManager.server.getAllPlayers().forEach(player -> onlineUserList.add(player.getRemoteAddress()));
-        llsManager.preLoginPlayers.forEach((key, value) -> {
+        llsManager.players.forEach((key, value) -> {
             if (!onlineUserList.contains(key)) {
                 removeList.add(key);
             }
         });
-        removeList.forEach(llsManager.preLoginPlayers::remove);
+        removeList.forEach(llsManager.players::remove);
 
         boolean isFloodgateUser = false;
         // 在安装了 Floodgate 的情况下
@@ -77,35 +77,32 @@ public class PreLoginEventHandler implements EventHandler<PreLoginEvent> {
             return;
         }
 
-        LlsPlayer llsPlayer = llsManager.onlinePlayers.get(username);
-        if (llsPlayer == null) {
-            llsPlayer = new LlsPlayer(username, llsManager.dataFolderPath);
-            if (llsPlayer.hasUser()) {
-                if (!llsPlayer.load()) {
-                    event.setResult(PreLoginEvent.PreLoginComponentResult.denied(Component.text("Load player data fail!")));
-                    return;
-                }
-                if (llsPlayer.getOnlineMode()) {
-                    llsPlayer.status = LlsPlayer.Status.ONLINE_USER;
-                } else if (llsPlayer.getPassword().equals("")) {
-                    llsPlayer.status = LlsPlayer.Status.NEED_REGISTER;
-                } else {
-                    llsPlayer.status = LlsPlayer.Status.NEED_LOGIN;
-                }
-            } else {
-                if (llsManager.config.getDefaultOnlineMode()) {
-                    llsPlayer.status = LlsPlayer.Status.ONLINE_USER;
-                } else {
-                    llsPlayer.status = LlsPlayer.Status.NEED_REGISTER;
-                }
-                // 在登陆服务器后 ServerConnectedEvent 时会保存最后登陆的服务器，会将用户配置写入 json
-                // 因此在这无需保存用户信息
-                // 主要是考虑到开启盗版验证并且不开白名单的情况下，可能会有很多垃圾用户连接，产生很多垃圾数据
-                // 因此设置为登陆成功后或者注册成功才能留下用户数据
+        LlsPlayer llsPlayer = new LlsPlayer(username, llsManager.dataFolderPath);
+        if (llsPlayer.hasUser()) {
+            if (!llsPlayer.load()) {
+                event.setResult(PreLoginEvent.PreLoginComponentResult.denied(Component.text("Load player data fail!")));
+                return;
             }
-            llsManager.preLoginPlayers.put(event.getConnection().getRemoteAddress(), llsPlayer);
+            if (llsPlayer.getOnlineMode()) {
+                llsPlayer.status = LlsPlayer.Status.LOGGED_IN;
+            } else if (llsPlayer.getPassword().equals("")) {
+                llsPlayer.status = LlsPlayer.Status.NEED_REGISTER;
+            } else {
+                llsPlayer.status = LlsPlayer.Status.NEED_LOGIN;
+            }
+        } else {
+            if (llsManager.config.getDefaultOnlineMode()) {
+                llsPlayer.status = LlsPlayer.Status.LOGGED_IN;
+                llsManager.playerSet.add(username);
+            } else {
+                llsPlayer.status = LlsPlayer.Status.NEED_REGISTER;
+            }
+            // 在登陆服务器后 ServerConnectedEvent 时会保存最后登陆的服务器，会将用户配置写入 json
+            // 因此在这无需保存用户信息
+            // 主要是考虑到开启盗版验证并且不开白名单的情况下，可能会有很多垃圾用户连接，产生很多垃圾数据
+            // 因此设置为登陆成功后或者注册成功才能留下用户数据
         }
-        // 在这里不处理同一个帐号多次登陆服务器的情况，选择在 LoginEvent 里处理
+        llsManager.players.put(event.getConnection().getRemoteAddress(), llsPlayer);
         if (!llsPlayer.getOnlineMode()) {
             event.setResult(PreLoginEvent.PreLoginComponentResult.forceOfflineMode());
         } else if (!isFloodgateUser) {

@@ -21,18 +21,12 @@ public class DisconnectEventHandler implements EventHandler<DisconnectEvent> {
     public void execute(DisconnectEvent event) {
         Player player = event.getPlayer();
         String username = player.getUsername();
-        LlsPlayer llsPlayer = llsManager.onlinePlayers.get(username);
-        if (llsPlayer != null) {
-            String serverName = llsPlayer.getLastServerName();
-            BridgeUtil.sendLeaveMessage(serverName, player);
-            // TODO 离开通知 API
-            if (!llsPlayer.setLastSeenTime(new Date())) {
-                llsManager.logger.error("Can't save the last seen time of player {}", username);
-            }
-        } else {
-            if (llsManager.preLoginPlayers.remove(player.getRemoteAddress()) == null) {
-                throw new IllegalStateException("Player not in preLoginPlayers.");
-            }
+        LlsPlayer llsPlayer = llsManager.players.remove(player.getRemoteAddress());
+        String serverName = llsPlayer.getLastServerName();
+        BridgeUtil.sendLeaveMessage(serverName, player);
+        // TODO 离开通知 API
+        if (llsPlayer.status == LlsPlayer.Status.LOGGED_IN && !llsPlayer.setLastSeenTime(new Date())) {
+            llsManager.logger.error("Can't save the last seen time of player {}", username);
         }
     }
 }

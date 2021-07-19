@@ -51,25 +51,20 @@ public class LlsSeenCommand {
                                         commandSource.sendMessage(userNotFoundText);
                                         return 0;
                                     }
-                                    LlsPlayer llsPlayer = llsManager.onlinePlayers.get(username);
-                                    if (llsPlayer != null) {
-                                        Optional<Player> optionalPlayer = llsManager.server.getPlayer(username);
-                                        if (optionalPlayer.isPresent()) {
-                                            Optional<ServerConnection> optionalRegisteredServer = optionalPlayer.get().getCurrentServer();
-                                            if (optionalRegisteredServer.isEmpty()) {
-                                                throw new IllegalStateException("optionalRegisteredServer should not empty.");
-                                            }
+                                    Optional<Player> optionalPlayer = llsManager.server.getPlayer(username);
+                                    if (optionalPlayer.isPresent()) {
+                                        Optional<ServerConnection> optionalRegisteredServer = optionalPlayer.get().getCurrentServer();
+                                        if (optionalRegisteredServer.isPresent()) {
                                             TranslatableComponent onlineText = Component.translatable("lls-manager.command.lls_seen.online")
                                                     .args(TextUtil.getUsernameComponent(username),
                                                             TextUtil.getServerNameComponent(optionalRegisteredServer.get().getServerInfo().getName()));
                                             commandSource.sendMessage(onlineText);
                                             return 1;
-                                        } else {
-                                            throw new IllegalStateException("optionalPlayer should not empty.");
                                         }
+                                        // 现在这个情况挺离谱的（我想不到触发方式）
                                     }
                                     // 玩家不在线的情况直接去查
-                                    llsPlayer = new LlsPlayer(username, llsManager.dataFolderPath);
+                                    LlsPlayer llsPlayer = new LlsPlayer(username, llsManager.dataFolderPath);
                                     if (llsPlayer.hasUser()) {
                                         if (!llsPlayer.load()) {
                                             commandSource.sendMessage(Component.translatable("lls-manager.command.lls_seen.load_player_data_fail").args(TextUtil.getUsernameComponent(username)));

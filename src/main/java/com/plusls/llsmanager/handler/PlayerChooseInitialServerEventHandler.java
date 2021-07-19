@@ -15,12 +15,12 @@ public class PlayerChooseInitialServerEventHandler implements EventHandler<Playe
 
     @Override
     public void execute(PlayerChooseInitialServerEvent event) {
-        LlsPlayer llsPlayer = llsManager.onlinePlayers.get(event.getPlayer().getUsername());
+        LlsPlayer llsPlayer = llsManager.players.get(event.getPlayer().getRemoteAddress());
         String serverName;
-        if (llsPlayer == null) {
-            serverName = llsManager.config.getAuthServerName();
-        } else {
+        if (llsPlayer.getOnlineMode()) {
             serverName = llsPlayer.getLastServerName();
+        } else {
+            serverName = llsManager.config.getAuthServerName();
         }
         llsManager.server.getServer(serverName).ifPresent(event::setInitialServer);
     }

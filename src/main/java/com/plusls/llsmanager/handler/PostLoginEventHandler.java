@@ -14,6 +14,5 @@ public class PostLoginEventHandler implements EventHandler<PostLoginEvent> {
 
     @Override
     public void execute(PostLoginEvent event) {
-
     }
 }

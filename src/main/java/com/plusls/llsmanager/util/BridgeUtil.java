@@ -14,13 +14,15 @@ import java.util.Objects;
 
 public class BridgeUtil {
 
+    private static final LlsManager llsManager = Objects.requireNonNull(LlsManager.getInstance());
+
     public static void sendMessageToAllPlayer(ComponentLike componentLike, List<String> channelList, @Nullable Exclude exclude) {
-        for (RegisteredServer server : Objects.requireNonNull(LlsManager.getInstance()).server.getAllServers()) {
+        for (RegisteredServer server : llsManager.server.getAllServers()) {
             for (Player player : server.getPlayersConnected()) {
                 if (exclude != null && exclude.test(player, server)) {
                     continue;
                 }
-                LlsPlayer llsPlayerToSend = Objects.requireNonNull(Objects.requireNonNull(LlsManager.getInstance()).onlinePlayers.get(player.getUsername()));
+                LlsPlayer llsPlayerToSend = llsManager.players.get(player.getRemoteAddress());
                 if (channelList.contains(llsPlayerToSend.getChannel())) {
                     player.sendMessage(componentLike);
                 }
@@ -29,13 +31,12 @@ public class BridgeUtil {
     }
 
     public static void sendLeaveMessage(String serverName, Player player) {
-        if (!Objects.requireNonNull(LlsManager.getInstance()).config.getBridgePlayerLeaveMessage()) {
+        if (!llsManager.config.getBridgePlayerLeaveMessage()) {
             return;
         }
         TranslatableComponent leaveMessage = Component.translatable("lls-manager.bridge.leave.format")
                 .args(TextUtil.getServerNameComponent(serverName),
                         TextUtil.getUsernameComponent(player.getUsername()));
-        LlsManager llsManager = Objects.requireNonNull(LlsManager.getInstance());
         BridgeUtil.sendMessageToAllPlayer(leaveMessage, llsManager.config.getLeaveMessageChannelList(),
                 (playerToSend, serverToSend) -> serverToSend.getServerInfo().getName().equals(serverName) ||
                         serverToSend.getServerInfo().getName().equals(llsManager.config.getAuthServerName()) ||
@@ -43,14 +44,13 @@ public class BridgeUtil {
     }
 
     public static void sendJoinMessage(String serverName, Player player) {
-        if (!Objects.requireNonNull(LlsManager.getInstance()).config.getBridgePlayerJoinMessage()) {
+        if (!llsManager.config.getBridgePlayerJoinMessage()) {
             return;
         }
         TranslatableComponent leaveMessage = Component.translatable("lls-manager.bridge.join.format")
                 .args(TextUtil.getServerNameComponent(serverName),
                         TextUtil.getUsernameComponent(player.getUsername()));
-        LlsManager llsManager = Objects.requireNonNull(LlsManager.getInstance());
-        BridgeUtil.sendMessageToAllPlayer(leaveMessage, Objects.requireNonNull(LlsManager.getInstance()).config.getLeaveMessageChannelList(),
+        BridgeUtil.sendMessageToAllPlayer(leaveMessage, llsManager.config.getLeaveMessageChannelList(),
                 (playerToSend, serverToSend) -> serverToSend.getServerInfo().getName().equals(serverName) ||
                         serverToSend.getServerInfo().getName().equals(llsManager.config.getAuthServerName()) ||
                         playerToSend.equals(player));

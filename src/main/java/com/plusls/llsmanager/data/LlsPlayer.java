@@ -12,6 +12,8 @@ import java.util.Objects;
 
 public class LlsPlayer extends AbstractConfig<LlsPlayer.LlsPlayerData> {
 
+    private static final LlsManager llsManager = Objects.requireNonNull(LlsManager.getInstance());
+
     // TODO last login time
     private LlsPlayerData data = new LlsPlayerData();
     public Status status;
@@ -24,7 +26,6 @@ public class LlsPlayer extends AbstractConfig<LlsPlayer.LlsPlayerData> {
     public static List<String> channelList = Arrays.asList(SERVER, SUB_SERVER, GLOBAL);
 
     public enum Status {
-        ONLINE_USER,
         LOGGED_IN,
         NEED_LOGIN,
         NEED_REGISTER
@@ -36,10 +37,10 @@ public class LlsPlayer extends AbstractConfig<LlsPlayer.LlsPlayerData> {
 
 
     public static class LlsPlayerData {
-        public boolean onlineMode = Objects.requireNonNull(LlsManager.getInstance()).config.getDefaultOnlineMode();
+        public boolean onlineMode = llsManager.config.getDefaultOnlineMode();
         public String password = "";
         public String lastServerName = "";
-        public String channel = Objects.requireNonNull(LlsManager.getInstance()).config.getDefaultChannel();
+        public String channel = llsManager.config.getDefaultChannel();
         public Date lastSeenTime = new Date();
     }
 
@@ -106,7 +107,7 @@ public class LlsPlayer extends AbstractConfig<LlsPlayer.LlsPlayerData> {
     public boolean load() {
         boolean ret = super.load();
         if (ret && !LlsPlayer.channelList.contains(data.channel)) {
-            String defaultChannel = Objects.requireNonNull(LlsManager.getInstance()).config.getDefaultChannel();
+            String defaultChannel = llsManager.config.getDefaultChannel();
             LlsManager.logger().warn("The channel {} in {} is unregistered, switch to default channel {}",
                     data.channel, path.getFileName(), defaultChannel);
             if (!setChannel(defaultChannel)) {

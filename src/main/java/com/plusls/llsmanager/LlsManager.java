@@ -68,11 +68,7 @@ public class LlsManager {
 
     private static LlsManager instance;
 
-    // 已经在线的用户
-    public final Map<String, LlsPlayer> onlinePlayers = new ConcurrentHashMap<>();
-
-    // 预登陆的用户，可能会出现同一个用户多个链接
-    public final Map<InetSocketAddress, LlsPlayer> preLoginPlayers = new ConcurrentHashMap<>();
+    public final Map<InetSocketAddress, LlsPlayer> players = new ConcurrentHashMap<>();
 
     public LlsWhitelist whitelist;
 
