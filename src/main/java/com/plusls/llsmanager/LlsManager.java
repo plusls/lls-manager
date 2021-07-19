@@ -29,6 +29,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -39,6 +40,7 @@ import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 @Plugin(
         id = "lls-manager",
@@ -67,13 +69,17 @@ public class LlsManager {
 
     private static LlsManager instance;
 
-    public final Map<String, LlsPlayer> players = new ConcurrentHashMap<>();
+    // 已经在线的用户
+    public final Map<String, LlsPlayer> onlinePlayers = new ConcurrentHashMap<>();
+
+    // 预登陆的用户，可能会出现同一个用户多个链接
+    public final Map<InetSocketAddress, LlsPlayer> preLoginPlayers = new ConcurrentHashMap<>();
 
     public LlsWhitelist whitelist;
 
     public Config config;
 
-    public ConcurrentLinkedQueue<String> playerList = new ConcurrentLinkedQueue<>();
+    public ConcurrentSkipListSet<String> playerSet = new ConcurrentSkipListSet<>();
 
     @Nullable
     public static LlsManager getInstance() {
@@ -104,6 +110,7 @@ public class LlsManager {
         PostLoginEventHandler.init(this);
         DisconnectEventHandler.init(this);
         ServerPreConnectEventHandler.init(this);
+        LoginEventHandler.init(this);
         LlsWhitelistCommand.register(this);
         LlsSeenCommand.register(this);
         LlsChannelCommand.register(this);
@@ -155,7 +162,7 @@ public class LlsManager {
         try {
             Files.list(dataFolderPath.resolve("player")).forEach(path -> {
                 String filename = path.getFileName().toString();
-                playerList.add(filename.substring(0, filename.length() - 5));
+                playerSet.add(filename.substring(0, filename.length() - 5));
             });
         } catch (IOException e) {
             e.printStackTrace();

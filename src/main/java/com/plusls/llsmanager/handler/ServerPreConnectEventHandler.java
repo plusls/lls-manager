@@ -4,10 +4,8 @@ import com.plusls.llsmanager.LlsManager;
 import com.plusls.llsmanager.data.LlsPlayer;
 import com.velocitypowered.api.event.EventHandler;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
+import com.velocitypowered.api.proxy.server.RegisteredServer;
 import net.kyori.adventure.text.Component;
-import org.mindrot.jbcrypt.BCrypt;
-
-import java.util.Objects;
 
 public class ServerPreConnectEventHandler implements EventHandler<ServerPreConnectEvent> {
     private static LlsManager llsManager;
@@ -20,10 +18,18 @@ public class ServerPreConnectEventHandler implements EventHandler<ServerPreConne
     @Override
     public void execute(ServerPreConnectEvent event) {
         // 防止未登陆的用户逃离登陆服
-        LlsPlayer llsPlayer = Objects.requireNonNull(llsManager.players.get(event.getPlayer().getUsername()));
-        if (!llsPlayer.getOnlineMode() && llsPlayer.status != LlsPlayer.Status.LOGGED_IN) {
-            event.getPlayer().disconnect(Component.text("Can't found auth server. Please contact server admin."));
+        ServerPreConnectEvent.ServerResult result = event.getResult();
+        if (result.getServer().isEmpty()) {
+            return;
         }
-        llsManager.logger.info("{}", BCrypt.checkpw("123", "456"));
+        RegisteredServer server;
+        server = result.getServer().get();
+
+        LlsPlayer llsPlayer = llsManager.onlinePlayers.get(event.getPlayer().getUsername());
+
+        if (llsPlayer == null && !server.getServerInfo().getName().equals(llsManager.config.getAuthServerName())) {
+            event.getPlayer().disconnect(Component.text("Can't connect to auth server. Please contact server admin."));
+            event.setResult(ServerPreConnectEvent.ServerResult.denied());
+        }
     }
 }

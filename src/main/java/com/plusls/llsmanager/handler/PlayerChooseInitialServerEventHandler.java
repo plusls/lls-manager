@@ -4,9 +4,6 @@ import com.plusls.llsmanager.LlsManager;
 import com.plusls.llsmanager.data.LlsPlayer;
 import com.velocitypowered.api.event.EventHandler;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
-import com.velocitypowered.api.proxy.Player;
-
-import java.util.Objects;
 
 public class PlayerChooseInitialServerEventHandler implements EventHandler<PlayerChooseInitialServerEvent> {
     private static LlsManager llsManager;
@@ -18,9 +15,13 @@ public class PlayerChooseInitialServerEventHandler implements EventHandler<Playe
 
     @Override
     public void execute(PlayerChooseInitialServerEvent event) {
-        Player player = event.getPlayer();
-        LlsPlayer llsPlayer = Objects.requireNonNull(llsManager.players.get(event.getPlayer().getUsername()));
-        String serverName = player.isOnlineMode()? llsPlayer.getLastServerName() : llsManager.config.getAuthServerName();
+        LlsPlayer llsPlayer = llsManager.onlinePlayers.get(event.getPlayer().getUsername());
+        String serverName;
+        if (llsPlayer == null) {
+            serverName = llsManager.config.getAuthServerName();
+        } else {
+            serverName = llsPlayer.getLastServerName();
+        }
         llsManager.server.getServer(serverName).ifPresent(event::setInitialServer);
     }
 }

@@ -10,6 +10,8 @@ import com.plusls.llsmanager.util.TextUtil;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ServerConnection;
+import com.velocitypowered.api.proxy.server.RegisteredServer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.TranslatableComponent;
@@ -17,6 +19,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Optional;
 
 public class LlsSeenCommand {
     public static void register(LlsManager llsManager) {
@@ -29,7 +32,7 @@ public class LlsSeenCommand {
                 .then(RequiredArgumentBuilder.<CommandSource, String>argument("username", StringArgumentType.string())
                         .suggests(
                                 (context, builder) -> {
-                                    llsManager.playerList.forEach(
+                                    llsManager.playerSet.forEach(
                                             username -> {
                                                 if (username.contains(builder.getRemaining())) {
                                                     builder.suggest(username);
@@ -42,25 +45,28 @@ public class LlsSeenCommand {
                                 context -> {
                                     CommandSource commandSource = context.getSource();
                                     String username = context.getArgument("username", String.class);
-                                    if (!llsManager.playerList.contains(username)) {
+                                    if (!llsManager.playerSet.contains(username)) {
                                         TranslatableComponent userNotFoundText = Component.translatable("lls-manager.command.lls_seen.not_found")
                                                 .color(NamedTextColor.RED)
                                                 .args(Component.text(username));
                                         commandSource.sendMessage(userNotFoundText);
                                         return 0;
                                     }
-                                    LlsPlayer llsPlayer = llsManager.players.get(username);
+                                    LlsPlayer llsPlayer = llsManager.onlinePlayers.get(username);
                                     if (llsPlayer != null) {
-                                        // 能找到玩家不一定代表它在线，需要去遍历服务器看看是不是在线
-                                        // 但是不这里面的玩家一定不在线
-                                        for (Player player : llsManager.server.getAllPlayers()) {
-                                            if (player.getUsername().equals(username) && player.getCurrentServer().isPresent()) {
-                                                TranslatableComponent onlineText = Component.translatable("lls-manager.command.lls_seen.online")
-                                                        .args(TextUtil.getUsernameComponent(username),
-                                                                TextUtil.getServerNameComponent(player.getCurrentServer().get().getServerInfo().getName()));
-                                                commandSource.sendMessage(onlineText);
-                                                return 1;
+                                        Optional<Player> optionalPlayer = llsManager.server.getPlayer(username);
+                                        if (optionalPlayer.isPresent()) {
+                                            Optional<ServerConnection> optionalRegisteredServer = optionalPlayer.get().getCurrentServer();
+                                            if (optionalRegisteredServer.isEmpty()) {
+                                                throw new IllegalStateException("optionalRegisteredServer should not empty.");
                                             }
+                                            TranslatableComponent onlineText = Component.translatable("lls-manager.command.lls_seen.online")
+                                                    .args(TextUtil.getUsernameComponent(username),
+                                                            TextUtil.getServerNameComponent(optionalRegisteredServer.get().getServerInfo().getName()));
+                                            commandSource.sendMessage(onlineText);
+                                            return 1;
+                                        } else {
+                                            throw new IllegalStateException("optionalPlayer should not empty.");
                                         }
                                     }
                                     // 玩家不在线的情况直接去查
@@ -107,7 +113,6 @@ public class LlsSeenCommand {
                                         return 0;
                                     }
                                     return 1;
-
                                 })
                 ).build();
         return new BrigadierCommand(llsWhitelistNode);

@@ -14,7 +14,6 @@ public class PostLoginEventHandler implements EventHandler<PostLoginEvent> {
 
     @Override
     public void execute(PostLoginEvent event) {
-//        Player player = event.getPlayer();
-//        LlsPlayer llsPlayer = Objects.requireNonNull(llsManager.players.get(player.getUsername()));
+
     }
 }

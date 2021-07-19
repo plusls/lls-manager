@@ -20,7 +20,7 @@ public class BridgeUtil {
                 if (exclude != null && exclude.test(player, server)) {
                     continue;
                 }
-                LlsPlayer llsPlayerToSend = Objects.requireNonNull(Objects.requireNonNull(LlsManager.getInstance()).players.get(player.getUsername()));
+                LlsPlayer llsPlayerToSend = Objects.requireNonNull(Objects.requireNonNull(LlsManager.getInstance()).onlinePlayers.get(player.getUsername()));
                 if (channelList.contains(llsPlayerToSend.getChannel())) {
                     player.sendMessage(componentLike);
                 }
