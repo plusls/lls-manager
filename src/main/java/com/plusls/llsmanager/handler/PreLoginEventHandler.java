@@ -65,7 +65,7 @@ public class PreLoginEventHandler implements EventHandler<PreLoginEvent> {
                 Object mcConnection = INITIAL_MINECRAFT_CONNECTION.get(event.getConnection());
                 Channel channel = (Channel) CHANNEL.get(mcConnection);
 
-                FloodgatePlayer player = (FloodgatePlayer)channel.attr(AttributeKey.valueOf("floodgate-player")).get();
+                FloodgatePlayer player = (FloodgatePlayer) channel.attr(AttributeKey.valueOf("floodgate-player")).get();
                 // 只考虑链接了的情况
                 if (player != null && player.isLinked()) {
                     username = player.getLinkedPlayer().getJavaUsername();

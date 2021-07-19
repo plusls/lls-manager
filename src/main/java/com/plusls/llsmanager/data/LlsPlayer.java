@@ -1,9 +1,6 @@
 package com.plusls.llsmanager.data;
 
 import com.plusls.llsmanager.LlsManager;
-import com.plusls.llsmanager.util.TextUtil;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

@@ -32,6 +32,8 @@ public class Config extends AbstractConfig<Config.ConfigData> {
         public boolean whitelist = false;
         // 默认聊天频道
         public String defaultChannel = LlsPlayer.SERVER;
+        // 离线认证服务器名字
+        public String authServerName = "lls-auth";
         // 接受聊天信息的 channel
         public ConcurrentLinkedQueue<String> chatMessageChannelList = new ConcurrentLinkedQueue<>();
         // 服务器内部互相传递信息的 channel
@@ -51,6 +53,15 @@ public class Config extends AbstractConfig<Config.ConfigData> {
             joinMessageChannelList.add(LlsPlayer.SERVER);
             joinMessageChannelList.add(LlsPlayer.GLOBAL);
         }
+    }
+
+    public String getAuthServerName() {
+        return config.authServerName;
+    }
+
+    public boolean setAuthServerName(String authServerName) {
+        config.authServerName = authServerName;
+        return save();
     }
 
     public String getDefaultChannel() {

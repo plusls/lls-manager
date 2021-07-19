@@ -11,7 +11,6 @@ import com.plusls.llsmanager.util.TextUtil;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.server.RegisteredServer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 
@@ -64,7 +63,8 @@ public class LlsChannelCommand {
                                             BridgeUtil.sendMessageToAllPlayer(Component.translatable("lls-manager.command.lls_seen.global_message")
                                                             .args(TextUtil.getUsernameComponent(username), TextUtil.getChannelComponent(channel)),
                                                     LlsPlayer.channelList,
-                                                    (playerToSend, serverToSend) -> player == playerToSend);
+                                                    (playerToSend, serverToSend) -> player == playerToSend ||
+                                                            serverToSend.getServerInfo().getName().equals(llsManager.config.getAuthServerName()));
                                             return 1;
                                         } else {
                                             commandSource.sendMessage(Component.translatable("lls-manager.command.lls_seen.failure")
@@ -85,13 +85,11 @@ public class LlsChannelCommand {
                             Map<String, List<String>> channelMap = new HashMap<>();
                             CommandSource commandSource = context.getSource();
                             LlsPlayer.channelList.forEach(name -> channelMap.put(name, new ArrayList<>()));
-                            for (RegisteredServer server : llsManager.server.getAllServers()) {
-                                for (Player player : server.getPlayersConnected()) {
-                                    String username = player.getUsername();
-                                    LlsPlayer llsPlayer = llsManager.players.get(player.getUsername());
-                                    // 在加载配置时会检查 channel 是否合法，因此这里不会出问题
-                                    channelMap.get(llsPlayer.getChannel()).add(username);
-                                }
+                            for (Player player : llsManager.server.getAllPlayers()) {
+                                String username = player.getUsername();
+                                LlsPlayer llsPlayer = llsManager.players.get(player.getUsername());
+                                // 在加载配置时会检查 channel 是否合法，因此这里不会出问题
+                                channelMap.get(llsPlayer.getChannel()).add(username);
                             }
                             for (Map.Entry<String, List<String>> entry : channelMap.entrySet()) {
                                 commandSource.sendMessage(Component.translatable("lls-manager.command.lls_seen.channel_info")

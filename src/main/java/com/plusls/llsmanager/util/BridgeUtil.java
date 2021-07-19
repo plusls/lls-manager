@@ -7,7 +7,6 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.TranslatableComponent;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -36,8 +35,11 @@ public class BridgeUtil {
         TranslatableComponent leaveMessage = Component.translatable("lls-manager.bridge.leave.format")
                 .args(TextUtil.getServerNameComponent(serverName),
                         TextUtil.getUsernameComponent(player.getUsername()));
-        BridgeUtil.sendMessageToAllPlayer(leaveMessage, Objects.requireNonNull(LlsManager.getInstance()).config.getLeaveMessageChannelList(),
-                (playerToSend, serverToSend) -> serverToSend.getServerInfo().getName().equals(serverName) || playerToSend.equals(player));
+        LlsManager llsManager = Objects.requireNonNull(LlsManager.getInstance());
+        BridgeUtil.sendMessageToAllPlayer(leaveMessage, llsManager.config.getLeaveMessageChannelList(),
+                (playerToSend, serverToSend) -> serverToSend.getServerInfo().getName().equals(serverName) ||
+                        serverToSend.getServerInfo().getName().equals(llsManager.config.getAuthServerName()) ||
+                        playerToSend.equals(player));
     }
 
     public static void sendJoinMessage(String serverName, Player player) {
@@ -47,8 +49,11 @@ public class BridgeUtil {
         TranslatableComponent leaveMessage = Component.translatable("lls-manager.bridge.join.format")
                 .args(TextUtil.getServerNameComponent(serverName),
                         TextUtil.getUsernameComponent(player.getUsername()));
+        LlsManager llsManager = Objects.requireNonNull(LlsManager.getInstance());
         BridgeUtil.sendMessageToAllPlayer(leaveMessage, Objects.requireNonNull(LlsManager.getInstance()).config.getLeaveMessageChannelList(),
-                (playerToSend, serverToSend) -> serverToSend.getServerInfo().getName().equals(serverName) || playerToSend.equals(player));
+                (playerToSend, serverToSend) -> serverToSend.getServerInfo().getName().equals(serverName) ||
+                        serverToSend.getServerInfo().getName().equals(llsManager.config.getAuthServerName()) ||
+                        playerToSend.equals(player));
     }
 
     @FunctionalInterface

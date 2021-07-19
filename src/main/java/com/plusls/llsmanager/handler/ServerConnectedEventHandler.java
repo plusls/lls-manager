@@ -8,7 +8,6 @@ import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 
-import java.util.Date;
 import java.util.Objects;
 
 public class ServerConnectedEventHandler implements EventHandler<ServerConnectedEvent> {

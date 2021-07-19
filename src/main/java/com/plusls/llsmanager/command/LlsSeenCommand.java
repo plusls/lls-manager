@@ -10,7 +10,6 @@ import com.plusls.llsmanager.util.TextUtil;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.server.RegisteredServer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.TranslatableComponent;
@@ -54,15 +53,13 @@ public class LlsSeenCommand {
                                     if (llsPlayer != null) {
                                         // 能找到玩家不一定代表它在线，需要去遍历服务器看看是不是在线
                                         // 但是不这里面的玩家一定不在线
-                                        for (RegisteredServer server : llsManager.server.getAllServers()) {
-                                            for (Player player : server.getPlayersConnected()) {
-                                                if (player.getUsername().equals(username)) {
-                                                    String serverName = server.getServerInfo().getName();
-                                                    TranslatableComponent onlineText = Component.translatable("lls-manager.command.lls_seen.online")
-                                                            .args(TextUtil.getUsernameComponent(username), TextUtil.getServerNameComponent(serverName));
-                                                    commandSource.sendMessage(onlineText);
-                                                    return 1;
-                                                }
+                                        for (Player player : llsManager.server.getAllPlayers()) {
+                                            if (player.getUsername().equals(username) && player.getCurrentServer().isPresent()) {
+                                                TranslatableComponent onlineText = Component.translatable("lls-manager.command.lls_seen.online")
+                                                        .args(TextUtil.getUsernameComponent(username),
+                                                                TextUtil.getServerNameComponent(player.getCurrentServer().get().getServerInfo().getName()));
+                                                commandSource.sendMessage(onlineText);
+                                                return 1;
                                             }
                                         }
                                     }

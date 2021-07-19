@@ -42,7 +42,9 @@ public class PlayerChatEventHandler implements EventHandler<PlayerChatEvent> {
                     .args(TextUtil.getServerNameComponent(serverName),
                             TextUtil.getUsernameComponent(username),
                             Component.text(message));
-            BridgeUtil.sendMessageToAllPlayer(translatableComponent, llsManager.config.getChatMessageChannelList(), (playerToSend, serverToSend) -> serverToSend.getServerInfo().getName().equals(serverName));
+            BridgeUtil.sendMessageToAllPlayer(translatableComponent, llsManager.config.getChatMessageChannelList(),
+                    (playerToSend, serverToSend) -> serverToSend.getServerInfo().getName().equals(serverName) ||
+                            serverToSend.getServerInfo().getName().equals(llsManager.config.getAuthServerName()));
             BridgeUtil.bridgeMessage(message, username, channel);
         });
     }
