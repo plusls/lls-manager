@@ -5,6 +5,7 @@ import com.plusls.llsmanager.LlsManager;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 public class LlsWhitelist extends AbstractConfig<LlsWhitelist.WhitelistData> {
     private WhitelistData whitelistData = new WhitelistData();
@@ -14,7 +15,7 @@ public class LlsWhitelist extends AbstractConfig<LlsWhitelist.WhitelistData> {
     }
 
     public static class WhitelistData {
-        public ConcurrentLinkedQueue<String> whiteList = new ConcurrentLinkedQueue<>();
+        public ConcurrentSkipListSet<String> whiteList = new ConcurrentSkipListSet<>();
     }
 
     public boolean query(String username) {

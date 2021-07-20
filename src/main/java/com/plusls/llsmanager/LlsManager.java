@@ -115,6 +115,7 @@ public class LlsManager {
         LlsLoginCommand.register(this);
         LlsPasswdCommand.register(this);
         LlsPlayerCommand.register(this);
+        LlsCreatePlayerCommand.register(this);
 
         logger.info("Lls-Manager load success!");
     }
@@ -129,6 +130,7 @@ public class LlsManager {
     }
 
     private void load() {
+        playerSet.clear();
         // 检查并创建 player 目录
         Path playerDataDirPath = dataFolderPath.resolve("player");
         if (!Files.exists(playerDataDirPath)) {

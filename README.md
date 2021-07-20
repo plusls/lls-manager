@@ -2,7 +2,7 @@
 
 A velocity plugin to manage server, such as whitelist, chat bridge, remember last server, offline auth.
 
-This plugin still in beta.
+**This plugin still in beta.**
 
 ## Config file
 
@@ -202,3 +202,7 @@ need permission `lls-manager.admin`
 A command to create a user with default config.
 
 + /lls_create_player \<username\>
+
+## TODO
+
+Add gRPC api to manage server.
