@@ -33,6 +33,7 @@ public class ServerConnectedEventHandler implements EventHandler<ServerConnected
         // TODO 通知 API
 
         if (llsPlayer.status == LlsPlayer.Status.LOGGED_IN) {
+            llsManager.playerSet.add(username);
             // 登陆了的用户才会记录
             if (!llsPlayer.setLastServerName(serverName)) {
                 LlsManager.logger().error("{} setLastServerName to {} fail.", username, serverName);

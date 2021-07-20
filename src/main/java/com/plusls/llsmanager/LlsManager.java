@@ -4,9 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.plusls.llsmanager.command.LlsChannelCommand;
-import com.plusls.llsmanager.command.LlsSeenCommand;
-import com.plusls.llsmanager.command.LlsWhitelistCommand;
+import com.plusls.llsmanager.command.*;
 import com.plusls.llsmanager.data.Config;
 import com.plusls.llsmanager.data.LlsPlayer;
 import com.plusls.llsmanager.data.LlsWhitelist;
@@ -106,9 +104,15 @@ public class LlsManager {
         DisconnectEventHandler.init(this);
         ServerPreConnectEventHandler.init(this);
         LoginEventHandler.init(this);
+        CommandExecuteEventHandler.init(this);
+        PlayerAvailableCommandsEventHandler.init(this);
+        ServerPostConnectEventHandler.init(this);
+
         LlsWhitelistCommand.register(this);
         LlsSeenCommand.register(this);
         LlsChannelCommand.register(this);
+        LlsRegisterCommand.register(this);
+        LlsLoginCommand.register(this);
         logger.info("Lls-Manager load success!");
     }
 

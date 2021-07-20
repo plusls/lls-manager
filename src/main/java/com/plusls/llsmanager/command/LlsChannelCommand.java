@@ -36,47 +36,42 @@ public class LlsChannelCommand {
                                 })
                         .executes(
                                 context -> {
-                                    CommandSource commandSource = context.getSource();
+                                    Player player = (Player) context.getSource();
                                     String channel = context.getArgument("channel", String.class);
                                     if (!LlsPlayer.channelList.contains(channel)) {
-                                        commandSource.sendMessage(Component.translatable("lls-manager.command.lls_seen.unregistered_channel")
+                                        player.sendMessage(Component.translatable("lls-manager.command.lls_channel.unregistered_channel")
                                                 .color(NamedTextColor.RED)
                                                 .args(TextUtil.getChannelComponent(channel))
                                         );
                                         return 0;
                                     }
-                                    if (commandSource instanceof Player player) {
-                                        LlsPlayer llsPlayer = llsManager.players.get(player.getRemoteAddress());
-                                        if (llsPlayer.getChannel().equals(channel)) {
-                                            commandSource.sendMessage(Component.translatable("lls-manager.command.lls_seen.add.already_in_channel")
-                                                    .color(NamedTextColor.RED)
-                                                    .args(TextUtil.getChannelComponent(channel))
-                                            );
-                                            return 0;
-                                        }
-                                        if (llsPlayer.setChannel(channel)) {
-                                            commandSource.sendMessage(Component.translatable("lls-manager.command.lls_seen.success")
-                                                    .color(NamedTextColor.GREEN)
-                                                    .args(TextUtil.getChannelComponent(channel))
-                                            );
-                                            BridgeUtil.sendMessageToAllPlayer(Component.translatable("lls-manager.command.lls_seen.global_message")
-                                                            .args(TextUtil.getUsernameComponent(player.getUsername()), TextUtil.getChannelComponent(channel)),
-                                                    LlsPlayer.channelList,
-                                                    (playerToSend, serverToSend) -> player == playerToSend ||
-                                                            serverToSend.getServerInfo().getName().equals(llsManager.config.getAuthServerName()));
-                                            return 1;
-                                        } else {
-                                            commandSource.sendMessage(Component.translatable("lls-manager.command.lls_seen.failure")
-                                                    .color(NamedTextColor.RED)
-                                                    .args(TextUtil.getChannelComponent(channel))
-                                            );
-                                            return 0;
-                                        }
-                                    } else {
-                                        // 理论上不会执行到这
-                                        commandSource.sendMessage(Component.translatable("lls-manager.command.lls_seen.command_source_error").color(NamedTextColor.RED));
+                                    LlsPlayer llsPlayer = llsManager.players.get(player.getRemoteAddress());
+                                    if (llsPlayer.getChannel().equals(channel)) {
+                                        player.sendMessage(Component.translatable("lls-manager.command.lls_channel.add.already_in_channel")
+                                                .color(NamedTextColor.RED)
+                                                .args(TextUtil.getChannelComponent(channel))
+                                        );
                                         return 0;
                                     }
+                                    if (llsPlayer.setChannel(channel)) {
+                                        player.sendMessage(Component.translatable("lls-manager.command.lls_channel.success")
+                                                .color(NamedTextColor.GREEN)
+                                                .args(TextUtil.getChannelComponent(channel))
+                                        );
+                                        BridgeUtil.sendMessageToAllPlayer(Component.translatable("lls-manager.command.lls_channel.global_message")
+                                                        .args(TextUtil.getUsernameComponent(player.getUsername()), TextUtil.getChannelComponent(channel)),
+                                                LlsPlayer.channelList,
+                                                (playerToSend, serverToSend) -> player == playerToSend ||
+                                                        serverToSend.getServerInfo().getName().equals(llsManager.config.getAuthServerName()));
+                                        return 1;
+                                    } else {
+                                        player.sendMessage(Component.translatable("lls-manager.command.lls_channel.failure")
+                                                .color(NamedTextColor.RED)
+                                                .args(TextUtil.getChannelComponent(channel))
+                                        );
+                                        return 0;
+                                    }
+
                                 }
                         ))
                 .executes(
@@ -91,7 +86,7 @@ public class LlsChannelCommand {
                                 channelMap.get(llsPlayer.getChannel()).add(username);
                             }
                             for (Map.Entry<String, List<String>> entry : channelMap.entrySet()) {
-                                commandSource.sendMessage(Component.translatable("lls-manager.command.lls_seen.channel_info")
+                                commandSource.sendMessage(Component.translatable("lls-manager.command.lls_channel.channel_info")
                                         .args(TextUtil.getChannelComponent(entry.getKey()), Component.text(entry.getValue().size()).color(NamedTextColor.GREEN)));
                                 entry.getValue().forEach(
                                         username -> commandSource.sendMessage(Component.text("- ").append(TextUtil.getUsernameComponent(username)))

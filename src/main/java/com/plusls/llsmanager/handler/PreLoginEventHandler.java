@@ -93,7 +93,6 @@ public class PreLoginEventHandler implements EventHandler<PreLoginEvent> {
         } else {
             if (llsManager.config.getDefaultOnlineMode()) {
                 llsPlayer.status = LlsPlayer.Status.LOGGED_IN;
-                llsManager.playerSet.add(username);
             } else {
                 llsPlayer.status = LlsPlayer.Status.NEED_REGISTER;
             }
