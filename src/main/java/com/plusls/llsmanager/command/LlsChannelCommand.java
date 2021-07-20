@@ -6,7 +6,7 @@ import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.plusls.llsmanager.LlsManager;
 import com.plusls.llsmanager.data.LlsPlayer;
-import com.plusls.llsmanager.util.BridgeUtil;
+import com.plusls.llsmanager.util.CommandUtil;
 import com.plusls.llsmanager.util.TextUtil;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
@@ -38,40 +38,11 @@ public class LlsChannelCommand {
                                 context -> {
                                     Player player = (Player) context.getSource();
                                     String channel = context.getArgument("channel", String.class);
-                                    if (!LlsPlayer.channelList.contains(channel)) {
-                                        player.sendMessage(Component.translatable("lls-manager.command.lls_channel.unregistered_channel")
-                                                .color(NamedTextColor.RED)
-                                                .args(TextUtil.getChannelComponent(channel))
-                                        );
-                                        return 0;
-                                    }
-                                    LlsPlayer llsPlayer = llsManager.players.get(player.getRemoteAddress());
-                                    if (llsPlayer.getChannel().equals(channel)) {
-                                        player.sendMessage(Component.translatable("lls-manager.command.lls_channel.add.already_in_channel")
-                                                .color(NamedTextColor.RED)
-                                                .args(TextUtil.getChannelComponent(channel))
-                                        );
-                                        return 0;
-                                    }
-                                    if (llsPlayer.setChannel(channel)) {
-                                        player.sendMessage(Component.translatable("lls-manager.command.lls_channel.success")
-                                                .color(NamedTextColor.GREEN)
-                                                .args(TextUtil.getChannelComponent(channel))
-                                        );
-                                        BridgeUtil.sendMessageToAllPlayer(Component.translatable("lls-manager.command.lls_channel.global_message")
-                                                        .args(TextUtil.getUsernameComponent(player.getUsername()), TextUtil.getChannelComponent(channel)),
-                                                LlsPlayer.channelList,
-                                                (playerToSend, serverToSend) -> player == playerToSend ||
-                                                        serverToSend.getServerInfo().getName().equals(llsManager.config.getAuthServerName()));
+                                    if (CommandUtil.setChannel(channel, player.getUsername(), player)) {
                                         return 1;
                                     } else {
-                                        player.sendMessage(Component.translatable("lls-manager.command.lls_channel.failure")
-                                                .color(NamedTextColor.RED)
-                                                .args(TextUtil.getChannelComponent(channel))
-                                        );
                                         return 0;
                                     }
-
                                 }
                         ))
                 .executes(

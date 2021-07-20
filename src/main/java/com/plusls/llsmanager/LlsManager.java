@@ -113,6 +113,9 @@ public class LlsManager {
         LlsChannelCommand.register(this);
         LlsRegisterCommand.register(this);
         LlsLoginCommand.register(this);
+        LlsPasswdCommand.register(this);
+        LlsPlayerCommand.register(this);
+
         logger.info("Lls-Manager load success!");
     }
 

@@ -15,46 +15,44 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.mindrot.jbcrypt.BCrypt;
 
-public class LlsRegisterCommand {
+public class LlsPasswdCommand {
 
     private static LlsManager llsManager;
 
     public static void register(LlsManager llsManager) {
-        LlsRegisterCommand.llsManager = llsManager;
+        LlsPasswdCommand.llsManager = llsManager;
         llsManager.commandManager.register(createBrigadierCommand());
     }
 
     private static BrigadierCommand createBrigadierCommand() {
-        LiteralCommandNode<CommandSource> llsRegisterNode = LiteralArgumentBuilder
-                .<CommandSource>literal("lls_register").requires(
+        LiteralCommandNode<CommandSource> llsPasswdNode = LiteralArgumentBuilder
+                .<CommandSource>literal("lls_passwd").requires(
                         commandSource -> commandSource instanceof Player player &&
-                                llsManager.players.get(player.getRemoteAddress()).status == LlsPlayer.Status.NEED_REGISTER
+                                !llsManager.players.get(player.getRemoteAddress()).getOnlineMode()
                 )
                 .then(RequiredArgumentBuilder.<CommandSource, String>argument("password", StringArgumentType.string()).then(
                         RequiredArgumentBuilder.<CommandSource, String>argument("passwordConfirm", StringArgumentType.string())
-                                .executes(LlsRegisterCommand::llsRegister))).build();
-        return new BrigadierCommand(llsRegisterNode);
+                                .executes(LlsPasswdCommand::llsPasswd))).build();
+        return new BrigadierCommand(llsPasswdNode);
     }
 
-    private static int llsRegister(CommandContext<CommandSource> context) {
+    private static int llsPasswd(CommandContext<CommandSource> context) {
         Player player = (Player) context.getSource();
 
         LlsPlayer llsPlayer = llsManager.players.get(player.getRemoteAddress());
         String password = context.getArgument("password", String.class);
         String passwordConfirm = context.getArgument("passwordConfirm", String.class);
         if (!password.equals(passwordConfirm)) {
-            context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_register.password_error", NamedTextColor.RED));
+            context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_passwd.password_error", NamedTextColor.RED));
             return 0;
         }
         password = BCrypt.hashpw(password, BCrypt.gensalt());
-        if (!llsPlayer.setPassword(password)) {
+        if (llsPlayer.setPassword(password)) {
+            player.sendMessage(Component.translatable("lls-manager.command.lls_passwd.success", NamedTextColor.GREEN));
+            return 1;
+        } else {
             CommandUtil.saveDataFail("password", player.getUsername(), player);
             return 0;
-        } else {
-            llsPlayer.status = LlsPlayer.Status.NEED_LOGIN;
-            player.sendMessage(Component.translatable("lls-manager.command.lls_register.success", NamedTextColor.GREEN));
-            player.sendMessage(Component.translatable("lls-manager.command.lls_login.hint"));
-            return 1;
         }
     }
 }

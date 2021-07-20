@@ -21,7 +21,7 @@ public class PlayerAvailableCommandsEventHandler implements EventHandler<PlayerA
                 commandNode -> {
                     String commandName = commandNode.getName();
                     if (status != LlsPlayer.Status.LOGGED_IN) {
-                        return !commandName.equals("lls_register") && !commandName.equals("lls_login");
+                        return !commandName.equals("lls_register") && !commandName.equals("lls_login") && !commandName.equals("server");
                     }
                     return false;
                 }

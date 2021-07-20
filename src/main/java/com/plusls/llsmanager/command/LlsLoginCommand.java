@@ -22,11 +22,11 @@ public class LlsLoginCommand {
     private static LlsManager llsManager;
 
     public static void register(LlsManager llsManager) {
-        llsManager.commandManager.register(createBrigadierCommand(llsManager));
+        LlsLoginCommand.llsManager = llsManager;
+        llsManager.commandManager.register(createBrigadierCommand());
     }
 
-    private static BrigadierCommand createBrigadierCommand(LlsManager llsManager) {
-        LlsLoginCommand.llsManager = llsManager;
+    private static BrigadierCommand createBrigadierCommand() {
         LiteralCommandNode<CommandSource> llsLoginNode = LiteralArgumentBuilder
                 .<CommandSource>literal("lls_login").requires(
                         commandSource -> commandSource instanceof Player player &&
@@ -45,9 +45,7 @@ public class LlsLoginCommand {
             context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_login.password_error", NamedTextColor.RED));
             return 0;
         }
-        password = BCrypt.hashpw(password, BCrypt.gensalt());
         llsPlayer.status = LlsPlayer.Status.LOGGED_IN;
-        llsPlayer.setPassword(password);
         context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_login.success", NamedTextColor.GREEN));
         Optional<RegisteredServer> registeredServerOptional = llsManager.server.getServer(llsPlayer.getLastServerName());
         registeredServerOptional.ifPresent(registeredServer -> player.createConnectionRequest(registeredServer).connect());
