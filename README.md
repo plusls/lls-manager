@@ -192,8 +192,8 @@ need permission `lls-manager.admin`
 
 A command to manage player data.
 + /lls_player <username> resetPassword
-+ /lls_player <username> setOnlineMode
-+ /lls_player <username> setChannel
++ /lls_player <username> setOnlineMode <status>
++ /lls_player <username> setChannel <channel>
 
 ### lls_create_player
 
