@@ -201,4 +201,4 @@ need permission `lls-manager.admin`
 
 A command to create a user with default config.
 
-+ /lls_create_player username
++ /lls_create_player <username>
