@@ -25,7 +25,7 @@ public class LlsChannelCommand {
     }
 
     private static BrigadierCommand createBrigadierCommand(LlsManager llsManager) {
-        LiteralCommandNode<CommandSource> llsWhitelistNode = LiteralArgumentBuilder
+        LiteralCommandNode<CommandSource> llsChannelNode = LiteralArgumentBuilder
                 .<CommandSource>literal("lls_channel")
                 .then(RequiredArgumentBuilder.<CommandSource, String>argument("channel", StringArgumentType.string())
                         .requires(commandSource -> commandSource instanceof Player)
@@ -100,7 +100,7 @@ public class LlsChannelCommand {
                             return 1;
                         }
                 ).build();
-        return new BrigadierCommand(llsWhitelistNode);
+        return new BrigadierCommand(llsChannelNode);
     }
 
 }

@@ -26,7 +26,7 @@ public class LlsSeenCommand {
     }
 
     private static BrigadierCommand createBrigadierCommand(LlsManager llsManager) {
-        LiteralCommandNode<CommandSource> llsWhitelistNode = LiteralArgumentBuilder
+        LiteralCommandNode<CommandSource> llsSeenNode = LiteralArgumentBuilder
                 .<CommandSource>literal("lls_seen")
                 .then(RequiredArgumentBuilder.<CommandSource, String>argument("username", StringArgumentType.string())
                         .suggests(
@@ -109,6 +109,6 @@ public class LlsSeenCommand {
                                     return 1;
                                 })
                 ).build();
-        return new BrigadierCommand(llsWhitelistNode);
+        return new BrigadierCommand(llsSeenNode);
     }
 }
