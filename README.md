@@ -139,8 +139,8 @@ The command in lls-manager.
 
 need permission `lls-manager.admin`
 
-+ /lls_whitelist add <username>
-+ /lls_whitelist remove <username>
++ /lls_whitelist add \<username\>
++ /lls_whitelist remove \<username\>
 + /lls_whitelist list
 + /lls_whitelist reload
 + /lls_whitelist status
@@ -155,28 +155,28 @@ need permission `lls-manager.admin`
 
 #### Switch channel
 
-+ /lls_channel <channel>
++ /lls_channel \<channel\>
 
 
 ### lls_login
 
 Login command
 
-+ /lls_login <password>
++ /lls_login \<password\>
 
 
 ### lls_register
 
 register
 
-+ /lls_passwd <password> <passwordConfirm>
++ /lls_passwd \<password\> \<passwordConfirm\>
 
 
 ### lls_passwd
 
 Change password
 
-+ /lls_passwd <password> <passwordConfirm>
++ /lls_passwd \<password\> \<passwordConfirm\>
 
 ### lls_seen
 
@@ -191,9 +191,9 @@ See the last login time of player.
 need permission `lls-manager.admin`
 
 A command to manage player data.
-+ /lls_player <username> resetPassword
-+ /lls_player <username> setOnlineMode <status>
-+ /lls_player <username> setChannel <channel>
++ /lls_player \<username\> resetPassword
++ /lls_player \<username\> setOnlineMode \<status\>
++ /lls_player \<username\> setChannel \<channel\>
 
 ### lls_create_player
 
@@ -201,4 +201,4 @@ need permission `lls-manager.admin`
 
 A command to create a user with default config.
 
-+ /lls_create_player <username>
++ /lls_create_player \<username\>
