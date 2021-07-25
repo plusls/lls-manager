@@ -10,6 +10,7 @@ buildscript {
 plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '7.0.0'
+    id 'com.google.protobuf' version '0.8.17'
 }
 
 group = 'com.plusls'
@@ -45,17 +46,42 @@ dependencies {
     compileOnly "io.netty:netty-all:${project.netty_version}"
     // bcrypt
     implementation "org.mindrot:jbcrypt:${project.jbcrypt_version}"
+    // grpc
+    implementation "io.grpc:grpc-protobuf:${project.grpc_version}"
+    implementation "io.grpc:grpc-stub:${project.grpc_version}"
+//    implementation "io.grpc:grpc-netty-shaded:${project.grpc_version}"
+    compileOnly 'org.apache.tomcat:annotations-api:6.0.53' // necessary for Java 9+
+
 }
 
-import org.apache.tools.ant.filters.ReplaceTokens
-
-task processSources(type: Sync) {
-    from sourceSets.main.java.srcDirs
-    inputs.property 'version', version
-    filter ReplaceTokens, tokens: [version: version]
-    into "$buildDir/src"
+protobuf {
+    protoc { artifact = "com.google.protobuf:protoc:${project.protobuf_version}" }
+    plugins {
+        grpc { artifact = "io.grpc:protoc-gen-grpc-java:${project.grpc_version}" }
+    }
+    generateProtoTasks {
+        all()*.plugins { grpc {} }
+    }
 }
 
-compileJava.source = processSources.outputs
+sourceSets {
+    main {
+        java {
+            srcDirs 'build/generated/source/proto/main/grpc'
+            srcDirs 'build/generated/source/proto/main/java'
+        }
+    }
+}
+
+// import org.apache.tools.ant.filters.ReplaceTokens
+
+//task processSources(type: Sync) {
+//    from sourceSets.main.java.srcDirs
+//    inputs.property 'version', version
+//    filter ReplaceTokens, tokens: [version: version]
+//    into "$buildDir/src"
+//}
+
+//compileJava.source = processSources.outputs
 
 build.dependsOn(shadowJar)
