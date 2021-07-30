@@ -41,8 +41,12 @@ public class ServerPostConnectEventHandler implements EventHandler<ServerPostCon
         // 因此必须在 ServerPostConnectEvent 中进行处理
         TabList playerTabList = player.getTabList();
 
+
         // TabList 本质上是一个 Map
         llsManager.server.getAllPlayers().forEach(eachPlayer -> eachPlayer.getCurrentServer().ifPresent(serverConnection -> {
+            if (!llsManager.config.getShowAllPlayerInTabList()) {
+                return;
+            }
             String eachPlayerServerName = serverConnection.getServerInfo().getName();
 
             // 更新自己的 TabList
@@ -61,7 +65,7 @@ public class ServerPostConnectEventHandler implements EventHandler<ServerPostCon
                 if (!eachPlayerTabList.containsEntry(player.getUniqueId())) {
                     eachPlayerTabList.addEntry(TabListUtil.getTabListEntry(player, eachPlayerTabList));
                 }
-                for (TabListEntry tabListEntry: eachPlayerTabList.getEntries()) {
+                for (TabListEntry tabListEntry : eachPlayerTabList.getEntries()) {
                     if (tabListEntry.getProfile().getId().equals(player.getUniqueId())) {
                         // llsManager.logger.warn("for update eachPlayerServerName: {} serverName: {} eachPlayer: {} player: {}", eachPlayerServerName, serverName, eachPlayer.getUsername(), username);
                         TabListUtil.updateTabListEntry(tabListEntry, username, serverName);

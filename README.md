@@ -14,6 +14,8 @@ Main config file example.
 
 ```json5
 {
+  // show all player inn tab list
+  "showAllPlayerInTabList": true,
   // allow bridge chat message
   "bridgeChatMessage": true,
   // send message to all server when player join
@@ -80,6 +82,17 @@ Whitelist config example.
 ## Features
 
 The features of lls-manager
+
+### Show All Player In Tab List
+
+lls-manager will add the player in other sub-server to tab list.
+
+![show-all-player-in-tab-list.png](./docs/img/show-all-player-in-tab-list.png)
+
+It supports show player's head when use chat bridge.(With mod [chat_heads](https://www.curseforge.com/minecraft/mc-mods/chat-heads))
+
+![chat-bridge-head.png](./docs/img/chat-bridge-head.png)
+
 
 ### Chat Bridge
 

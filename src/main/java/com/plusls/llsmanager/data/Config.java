@@ -22,6 +22,8 @@ public class Config extends AbstractConfig<Config.ConfigData> {
     }
 
     public static class ConfigData {
+        // 是否在 TabList 显示子服玩家
+        public boolean showAllPlayerInTabList = false;
         // 是否同步聊天信息
         public boolean bridgeChatMessage = false;
         // 是否同步玩家加入信息
@@ -57,11 +59,20 @@ public class Config extends AbstractConfig<Config.ConfigData> {
         }
     }
 
+    public boolean getShowAllPlayerInTabList() {
+        return config.showAllPlayerInTabList;
+    }
+
+    public boolean setShowAllPlayerInTabList(boolean showAllPlayerInTabList) {
+        config.showAllPlayerInTabList = showAllPlayerInTabList;
+        return save();
+    }
+
     public boolean getDefaultOnlineMode() {
         return config.defaultOnlineMode;
     }
 
-    public boolean getDefaultOnlineMode(boolean defaultOnlineMode) {
+    public boolean setDefaultOnlineMode(boolean defaultOnlineMode) {
         config.defaultOnlineMode = defaultOnlineMode;
         return save();
     }

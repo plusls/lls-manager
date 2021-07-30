@@ -4,7 +4,6 @@ import com.plusls.llsmanager.LlsManager;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 public class LlsWhitelist extends AbstractConfig<LlsWhitelist.WhitelistData> {
