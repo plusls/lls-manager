@@ -3,9 +3,12 @@ package com.plusls.llsmanager.handler;
 import com.plusls.llsmanager.LlsManager;
 import com.plusls.llsmanager.data.LlsPlayer;
 import com.plusls.llsmanager.util.BridgeUtil;
+import com.plusls.llsmanager.util.TabListUtil;
 import com.velocitypowered.api.event.EventHandler;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.player.TabList;
+import com.velocitypowered.api.proxy.player.TabListEntry;
 
 import java.util.Date;
 
@@ -28,5 +31,6 @@ public class DisconnectEventHandler implements EventHandler<DisconnectEvent> {
         if (llsPlayer.status == LlsPlayer.Status.LOGGED_IN && !llsPlayer.setLastSeenTime(new Date())) {
             llsManager.logger.error("Can't save the last seen time of player {}", username);
         }
+        llsManager.server.getAllPlayers().forEach(eachPlayer -> eachPlayer.getTabList().removeEntry(player.getUniqueId()));
     }
 }

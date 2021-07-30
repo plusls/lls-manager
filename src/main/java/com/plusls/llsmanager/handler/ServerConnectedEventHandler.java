@@ -8,6 +8,7 @@ import com.velocitypowered.api.event.EventHandler;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.player.TabList;
+import com.velocitypowered.api.proxy.player.TabListEntry;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 
 public class ServerConnectedEventHandler implements EventHandler<ServerConnectedEvent> {
@@ -41,13 +42,5 @@ public class ServerConnectedEventHandler implements EventHandler<ServerConnected
                 LlsManager.logger().error("{} setLastServerName to {} fail.", username, serverName);
             }
         }
-        llsManager.server.getAllPlayers().forEach(eachPlayer -> eachPlayer.getCurrentServer().ifPresent(serverConnection -> {
-            if (!serverConnection.getServerInfo().getName().equals(serverName)) {
-                TabList tabList = eachPlayer.getTabList();
-                tabList.removeEntry(player.getUniqueId());
-
-                tabList.addEntry(TabListUtil.getTabListEntry(player, tabList, serverName));
-            }
-        }));
     }
 }
