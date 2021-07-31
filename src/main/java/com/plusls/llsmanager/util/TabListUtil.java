@@ -12,9 +12,9 @@ public class TabListUtil {
 
     public static void updateTabListEntry(TabListEntry tabListEntry, String username, String serverName) {
         tabListEntry.setGameMode(0).setLatency(114514).setDisplayName(TextUtil.getUsernameComponent(username)
-                .append(Component.text(" <"))
+                .append(Component.text(" ["))
                 .append(TextUtil.getServerNameComponent(serverName))
-                .append(Component.text(">")));
+                .append(Component.text("]")));
     }
 
 }
