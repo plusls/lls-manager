@@ -23,7 +23,7 @@ public class TextUtil {
         HoverEvent<Component> hoverEvent = HoverEvent.showText(Component.translatable("lls-manager.text.user.hover_event")
                 .args(getUsernameComponentWithoutEvent(username)));
         return getUsernameComponentWithoutEvent(username).hoverEvent(hoverEvent)
-                .clickEvent(ClickEvent.runCommand("/lls_seen " + username));
+                .clickEvent(ClickEvent.runCommand("/lls_seen query " + username));
     }
 
     public static Component getUsernameComponentWithoutEvent(String username) {

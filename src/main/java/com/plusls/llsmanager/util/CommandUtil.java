@@ -6,6 +6,7 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
@@ -13,7 +14,7 @@ import java.util.Optional;
 
 public class CommandUtil {
     @Nullable
-    public static LlsPlayer getLlsPlayer(String username, CommandSource source) {
+    public static LlsPlayer getLlsPlayer(String username, @Nullable CommandSource source) {
         LlsManager llsManager = Objects.requireNonNull(LlsManager.getInstance());
         LlsPlayer llsPlayer;
         Optional<Player> playerOptional = llsManager.server.getPlayer(username);
@@ -22,10 +23,14 @@ public class CommandUtil {
         } else {
             llsPlayer = new LlsPlayer(username, llsManager.dataFolderPath);
             if (!llsPlayer.hasUser()) {
-                source.sendMessage(Component.translatable("lls-manager.text.player_not_found", NamedTextColor.RED).args(TextUtil.getUsernameComponent(username)));
+                if (source != null) {
+                    source.sendMessage(Component.translatable("lls-manager.text.player_not_found", NamedTextColor.RED).args(TextUtil.getUsernameComponent(username)));
+                }
                 return null;
             } else if (!llsPlayer.load()) {
-                source.sendMessage(Component.translatable("lls-manager.text.load_player_data_fail").args(TextUtil.getUsernameComponent(username)));
+                if (source != null) {
+                    source.sendMessage(Component.translatable("lls-manager.text.load_player_data_fail").args(TextUtil.getUsernameComponent(username)));
+                }
                 return null;
             }
         }
