@@ -3,13 +3,20 @@ package com.plusls.llsmanager;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.plusls.llsmanager.command.*;
 import com.plusls.llsmanager.data.Config;
 import com.plusls.llsmanager.data.LlsPlayer;
 import com.plusls.llsmanager.data.LlsWhitelist;
 import com.plusls.llsmanager.handler.*;
+import com.plusls.llsmanager.seen.LlsSeenCommand;
+import com.plusls.llsmanager.seen.SeenHandler;
+import com.plusls.llsmanager.util.LlsManagerException;
+import com.plusls.llsmanager.util.TextUtil;
 import com.velocitypowered.api.command.CommandManager;
+import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyReloadEvent;
@@ -18,11 +25,15 @@ import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
+import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.translation.GlobalTranslator;
 import net.kyori.adventure.translation.TranslationRegistry;
 import net.kyori.adventure.util.UTF8ResourceBundleControl;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -32,10 +43,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.*;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
@@ -48,6 +56,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
         authors = {"plusls"},
         dependencies = {@Dependency(id = "floodgate", optional = true)}
 )
+@Singleton
 public class LlsManager {
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
@@ -58,20 +67,28 @@ public class LlsManager {
     public ProxyServer server;
 
     @Inject
+    public CommandManager commandManager;
+
+    @Inject
+    public EventManager eventManager;
+
+    @Inject
     @DataDirectory
     public Path dataFolderPath;
 
     @Inject
-    public CommandManager commandManager;
+    public Injector injector;
 
     private static LlsManager instance;
 
+    // 在线的玩家
     public final Map<InetSocketAddress, LlsPlayer> players = new ConcurrentHashMap<>();
 
     public LlsWhitelist whitelist;
 
     public Config config;
 
+    // 所有玩家，包含不在线的玩家
     public ConcurrentSkipListSet<String> playerSet = new ConcurrentSkipListSet<>();
 
     @Nullable
@@ -96,6 +113,7 @@ public class LlsManager {
         load();
         // 注册本地化字符
         registerTranslations();
+        SeenHandler.init(this);
         PlayerChooseInitialServerEventHandler.init(this);
         ServerConnectedEventHandler.init(this);
         PlayerChatEventHandler.init(this);
@@ -109,7 +127,6 @@ public class LlsManager {
         ServerPostConnectEventHandler.init(this);
 
         LlsWhitelistCommand.register(this);
-        LlsSeenCommand.register(this);
         LlsChannelCommand.register(this);
         LlsRegisterCommand.register(this);
         LlsLoginCommand.register(this);
@@ -252,4 +269,22 @@ public class LlsManager {
         }
         GlobalTranslator.get().addSource(translationRegistry);
     }
+
+    @NotNull
+    public LlsPlayer getLlsPlayer(String username) throws LlsManagerException {
+        LlsPlayer llsPlayer;
+        Optional<Player> playerOptional = server.getPlayer(username);
+        if (playerOptional.isPresent()) {
+            llsPlayer = Objects.requireNonNull(players.get(playerOptional.get().getRemoteAddress()));
+        } else {
+            llsPlayer = new LlsPlayer(username, dataFolderPath);
+            if (!llsPlayer.hasUser()) {
+                throw new LlsManagerException(Component.translatable("lls-manager.text.player_not_found", NamedTextColor.RED).args(TextUtil.getUsernameComponent(username)));
+            } else if (!llsPlayer.load()) {
+                throw new LlsManagerException(Component.translatable("lls-manager.text.load_player_data_fail").args(TextUtil.getUsernameComponent(username)));
+            }
+        }
+        return llsPlayer;
+    }
+
 }

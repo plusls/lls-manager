@@ -17,7 +17,7 @@ public class LlsPlayer extends AbstractConfig<LlsPlayer.LlsPlayerData> {
     // TODO last login time
     private LlsPlayerData data = new LlsPlayerData();
     public Status status;
-
+    public String username;
     public static final String SERVER = "server";
     public static final String SUB_SERVER = "sub_server";
     public static final String GLOBAL = "global";
@@ -28,11 +28,14 @@ public class LlsPlayer extends AbstractConfig<LlsPlayer.LlsPlayerData> {
     public enum Status {
         LOGGED_IN,
         NEED_LOGIN,
-        NEED_REGISTER
+        NEED_REGISTER,
+        OFFLINE
     }
 
     public LlsPlayer(String username, Path dataFolderPath) {
         super(dataFolderPath.resolve("player").resolve(username + ".json"), LlsPlayerData.class);
+        status = Status.OFFLINE;
+        this.username = username;
     }
 
 
