@@ -11,8 +11,8 @@ import com.plusls.llsmanager.data.Config;
 import com.plusls.llsmanager.data.LlsPlayer;
 import com.plusls.llsmanager.data.LlsWhitelist;
 import com.plusls.llsmanager.handler.*;
-import com.plusls.llsmanager.seen.LlsSeenCommand;
 import com.plusls.llsmanager.seen.SeenHandler;
+import com.plusls.llsmanager.tabListSync.TabListSyncHandler;
 import com.plusls.llsmanager.util.LlsManagerException;
 import com.plusls.llsmanager.util.TextUtil;
 import com.velocitypowered.api.command.CommandManager;
@@ -114,6 +114,7 @@ public class LlsManager {
         // 注册本地化字符
         registerTranslations();
         SeenHandler.init(this);
+        TabListSyncHandler.init(this);
         PlayerChooseInitialServerEventHandler.init(this);
         ServerConnectedEventHandler.init(this);
         PlayerChatEventHandler.init(this);

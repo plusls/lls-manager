@@ -53,12 +53,12 @@ public class LlsWhitelistCommand {
                         )
                 ).then(LiteralArgumentBuilder.<CommandSource>literal("remove")
                         .then(RequiredArgumentBuilder.<CommandSource, String>argument("username", StringArgumentType.string()).suggests(
-                                (context, builder) -> {
-                                    for (String username : llsManager.whitelist.search(builder.getRemaining())) {
-                                        builder.suggest(username);
-                                    }
-                                    return builder.buildFuture();
-                                })
+                                        (context, builder) -> {
+                                            for (String username : llsManager.whitelist.search(builder.getRemaining())) {
+                                                builder.suggest(username);
+                                            }
+                                            return builder.buildFuture();
+                                        })
                                 .executes(
                                         context -> {
                                             String username = context.getArgument("username", String.class);

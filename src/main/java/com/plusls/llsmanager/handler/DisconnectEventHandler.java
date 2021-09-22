@@ -8,8 +8,6 @@ import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.proxy.Player;
 
-import java.util.Date;
-
 public class DisconnectEventHandler implements EventHandler<DisconnectEvent> {
     private static LlsManager llsManager;
 
@@ -24,6 +22,5 @@ public class DisconnectEventHandler implements EventHandler<DisconnectEvent> {
         LlsPlayer llsPlayer = llsManager.players.remove(player.getRemoteAddress());
         String serverName = llsPlayer.getLastServerName();
         BridgeUtil.sendLeaveMessage(serverName, player);
-        llsManager.server.getAllPlayers().forEach(eachPlayer -> eachPlayer.getTabList().removeEntry(player.getUniqueId()));
     }
 }

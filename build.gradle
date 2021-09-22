@@ -44,6 +44,7 @@ dependencies {
     annotationProcessor "com.velocitypowered:velocity-api:${project.velocity_version}"
     compileOnly "org.geysermc.floodgate:api:${project.floodgate_version}"
     compileOnly "io.netty:netty-all:${project.netty_version}"
+    compileOnly fileTree(dir: 'lib', include: ['*.jar'])
     // bcrypt
     implementation "org.mindrot:jbcrypt:${project.jbcrypt_version}"
     // grpc
