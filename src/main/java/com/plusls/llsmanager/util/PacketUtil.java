@@ -6,23 +6,45 @@ import com.velocitypowered.proxy.protocol.StateRegistry;
 import io.netty.util.collection.IntObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.function.Supplier;
 
 public class PacketUtil {
 
-    @SuppressWarnings(value = "unchecked")
+    private static final Field versionsField = ReflectUtil.getField(StateRegistry.PacketRegistry.class, "versions");
+    private static final Field packetIdToSupplierField = ReflectUtil.getField(StateRegistry.PacketRegistry.ProtocolRegistry.class, "packetIdToSupplier");
+    private static final Field packetClassToIdField = ReflectUtil.getField(StateRegistry.PacketRegistry.ProtocolRegistry.class, "packetClassToId");
+    private static final Constructor<StateRegistry.PacketMapping> constructor;
+    private static final Method registerMethod;
+
+    static {
+        try {
+            constructor = StateRegistry.PacketMapping.class.getDeclaredConstructor(int.class, ProtocolVersion.class, ProtocolVersion.class, boolean.class);
+            constructor.setAccessible(true);
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+            throw new IllegalStateException(e.getMessage());
+        }
+
+        try {
+            registerMethod = StateRegistry.PacketRegistry.class.getDeclaredMethod("register", Class.class, Supplier.class, StateRegistry.PacketMapping[].class);
+            registerMethod.setAccessible(true);
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+            throw new IllegalStateException(e.getMessage());
+
+        }
+    }
+
+    @SuppressWarnings("unchecked")
     public static void replacePacketHandler(StateRegistry.PacketRegistry toReplace,
                                             Class<? extends MinecraftPacket> oldClazz,
                                             Class<? extends MinecraftPacket> newClazz,
                                             Supplier<? extends MinecraftPacket> newSupplier) {
-        Field versionsField = ReflectUtil.getField(StateRegistry.PacketRegistry.class, "versions");
-        Field packetIdToSupplierField = ReflectUtil.getField(StateRegistry.PacketRegistry.ProtocolRegistry.class, "packetIdToSupplier");
-        Field packetClassToIdField = ReflectUtil.getField(StateRegistry.PacketRegistry.ProtocolRegistry.class, "packetClassToId");
-        if (versionsField == null || packetIdToSupplierField == null || packetClassToIdField == null) {
-            return;
-        }
         Map<ProtocolVersion, StateRegistry.PacketRegistry.ProtocolRegistry> versions;
         try {
             versions = (Map<ProtocolVersion, StateRegistry.PacketRegistry.ProtocolRegistry>) versionsField.get(toReplace);
@@ -55,5 +77,32 @@ public class PacketUtil {
             }
         }
 
+    }
+
+    public static void registerPacketHandler(StateRegistry.PacketRegistry toReplace,
+                                             Class<? extends MinecraftPacket> newClazz,
+                                             Supplier<? extends MinecraftPacket> newSupplier,
+                                             StateRegistry.PacketMapping... mappings) {
+        try {
+            registerMethod.invoke(toReplace, newClazz, newSupplier, mappings);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public static StateRegistry.PacketMapping map(int id, ProtocolVersion version, boolean encodeOnly) {
+        return map(id, version, null, encodeOnly);
+    }
+
+
+    public static StateRegistry.PacketMapping map(int id, ProtocolVersion version,
+                                                  ProtocolVersion lastValidProtocolVersion, boolean encodeOnly) {
+        try {
+            return constructor.newInstance(id, version, lastValidProtocolVersion, encodeOnly);
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+            throw new IllegalStateException(e.getMessage());
+        }
     }
 }

@@ -15,6 +15,7 @@ import com.plusls.llsmanager.seen.SeenHandler;
 import com.plusls.llsmanager.tabListSync.TabListSyncHandler;
 import com.plusls.llsmanager.util.LlsManagerException;
 import com.plusls.llsmanager.util.TextUtil;
+import com.plusls.llsmanager.xaeroWorldSync.XaeroWorldSyncHandler;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.Subscribe;
@@ -79,6 +80,7 @@ public class LlsManager {
     @Inject
     public Injector injector;
 
+    @Nullable
     private static LlsManager instance;
 
     // 在线的玩家
@@ -91,13 +93,13 @@ public class LlsManager {
     // 所有玩家，包含不在线的玩家
     public ConcurrentSkipListSet<String> playerSet = new ConcurrentSkipListSet<>();
 
-    @Nullable
+    @NotNull
     public static LlsManager getInstance() {
-        return instance;
+        return Objects.requireNonNull(instance);
     }
 
     public static Logger logger() {
-        return Objects.requireNonNull(getInstance()).logger;
+        return getInstance().logger;
     }
 
     public boolean hasFloodgate = false;
@@ -115,6 +117,8 @@ public class LlsManager {
         registerTranslations();
         SeenHandler.init(this);
         TabListSyncHandler.init(this);
+        XaeroWorldSyncHandler.init(this);
+
         PlayerChooseInitialServerEventHandler.init(this);
         ServerConnectedEventHandler.init(this);
         PlayerChatEventHandler.init(this);
