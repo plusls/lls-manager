@@ -11,11 +11,11 @@ import com.plusls.llsmanager.data.Config;
 import com.plusls.llsmanager.data.LlsPlayer;
 import com.plusls.llsmanager.data.LlsWhitelist;
 import com.plusls.llsmanager.handler.*;
+import com.plusls.llsmanager.minimapWorldSync.MinimapWorldSyncHandler;
 import com.plusls.llsmanager.seen.SeenHandler;
 import com.plusls.llsmanager.tabListSync.TabListSyncHandler;
 import com.plusls.llsmanager.util.LlsManagerException;
 import com.plusls.llsmanager.util.TextUtil;
-import com.plusls.llsmanager.xaeroWorldSync.XaeroWorldSyncHandler;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.Subscribe;
@@ -117,7 +117,7 @@ public class LlsManager {
         registerTranslations();
         SeenHandler.init(this);
         TabListSyncHandler.init(this);
-        XaeroWorldSyncHandler.init(this);
+        MinimapWorldSyncHandler.init(this);
 
         PlayerChooseInitialServerEventHandler.init(this);
         ServerConnectedEventHandler.init(this);

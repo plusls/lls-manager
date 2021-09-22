@@ -46,8 +46,8 @@ public class Config extends AbstractConfig<Config.ConfigData> {
         public ConcurrentLinkedQueue<String> leaveMessageChannelList = new ConcurrentLinkedQueue<>();
         // 接受加入游戏信息的 channel
         public ConcurrentLinkedQueue<String> joinMessageChannelList = new ConcurrentLinkedQueue<>();
-        // 启用 xaero 地图同步
-        public boolean xaeroWorldSync = false;
+        // 启用小地图同步
+        public boolean minimapWorldSync = false;
 
         public ConfigData() {
             chatMessageChannelList.add(LlsPlayer.SERVER);
@@ -61,12 +61,12 @@ public class Config extends AbstractConfig<Config.ConfigData> {
         }
     }
 
-    public boolean getXaeroWorldSync() {
-        return config.xaeroWorldSync;
+    public boolean getMinimapWorldSync() {
+        return config.minimapWorldSync;
     }
 
-    public boolean setXaeroWorldSync(boolean xaeroWorldSync) {
-        config.xaeroWorldSync = xaeroWorldSync;
+    public boolean setMinimapWorldSync(boolean minimapWorldSync) {
+        config.minimapWorldSync = minimapWorldSync;
         return save();
     }
 

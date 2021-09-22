@@ -1,4 +1,4 @@
-package com.plusls.llsmanager.xaeroWorldSync;
+package com.plusls.llsmanager.minimapWorldSync;
 
 import com.plusls.llsmanager.LlsManager;
 import com.plusls.llsmanager.util.ReflectUtil;
@@ -17,20 +17,18 @@ import java.nio.charset.StandardCharsets;
 import java.util.zip.CRC32;
 
 public class PlayerSpawnPosition implements MinecraftPacket {
-    private long pos;
-    private float angle;
+    private ByteBuf data;
     private static final Field serverConnField = ReflectUtil.getField(BackendPlaySessionHandler.class, "serverConn");
 
     @Override
     public void decode(ByteBuf byteBuf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-        pos = byteBuf.readLong();
-        angle = byteBuf.readFloat();
+        data = byteBuf.readBytes(byteBuf.readableBytes());
     }
 
     @Override
     public void encode(ByteBuf byteBuf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {
-        byteBuf.writeLong(pos);
-        byteBuf.writeFloat(angle);
+        byteBuf.writeBytes(data);
+        data.release();
     }
 
     @Override
@@ -43,7 +41,7 @@ public class PlayerSpawnPosition implements MinecraftPacket {
             throw new IllegalStateException(e.getMessage());
         }
         serverConn.getPlayer().getConnection().write(this);
-        if (!LlsManager.getInstance().config.getXaeroWorldSync()) {
+        if (!LlsManager.getInstance().config.getMinimapWorldSync()) {
             return true;
         }
         byte[] serverName = serverConn.getServerInfo().getName().getBytes(StandardCharsets.UTF_8);
@@ -57,11 +55,7 @@ public class PlayerSpawnPosition implements MinecraftPacket {
         serverConn.getPlayer().sendPluginMessage(MinecraftChannelIdentifier.create("xaeroworldmap", "main"), xaeroArray);
         serverConn.getPlayer().sendPluginMessage(MinecraftChannelIdentifier.create("xaerominimap", "main"), xaeroArray);
 
-        ByteBuf voxelBuf = Unpooled.buffer();
-        voxelBuf.writeByte(serverName.length);
-        voxelBuf.writeBytes(serverName);
-        byte[] voxelArray = voxelBuf.array();
-        serverConn.getPlayer().sendPluginMessage(MinecraftChannelIdentifier.create("voxelmap", "world_id"), voxelArray);
+
         return true;
     }
 }

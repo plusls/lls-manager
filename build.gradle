@@ -74,6 +74,10 @@ sourceSets {
     }
 }
 
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
+
 // import org.apache.tools.ant.filters.ReplaceTokens
 
 //task processSources(type: Sync) {
