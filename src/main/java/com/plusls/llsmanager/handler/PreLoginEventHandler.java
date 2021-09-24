@@ -16,22 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PreLoginEventHandler implements EventHandler<PreLoginEvent> {
-    private static LlsManager llsManager;
-    private static Field INITIAL_MINECRAFT_CONNECTION;
-    private static Field CHANNEL;
 
-    static {
-        try {
-            Class<?> initialConnection = Class.forName("com.velocitypowered.proxy.connection.client.InitialInboundConnection");
-            Class<?> minecraftConnection = Class.forName("com.velocitypowered.proxy.connection.MinecraftConnection");
-            INITIAL_MINECRAFT_CONNECTION = initialConnection.getDeclaredField("connection");
-            CHANNEL = minecraftConnection.getDeclaredField("channel");
-            INITIAL_MINECRAFT_CONNECTION.setAccessible(true);
-            CHANNEL.setAccessible(true);
-        } catch (ClassNotFoundException | NoSuchFieldException e) {
-            e.printStackTrace();
-        }
-    }
+    private static LlsManager llsManager;
 
     public static void init(LlsManager llsManager) {
         llsManager.server.getEventManager().register(llsManager, PreLoginEvent.class, new PreLoginEventHandler());
@@ -42,6 +28,10 @@ public class PreLoginEventHandler implements EventHandler<PreLoginEvent> {
     // 在 PreLoginEvent 阶段可能会出现用户重复登陆的情况，其它阶段则不会
     @Override
     public void execute(PreLoginEvent event) {
+        // 如果别的插件阻止了，那就不需要做
+        if (event.getResult() != PreLoginEvent.PreLoginComponentResult.allowed()){
+            return;
+        }
         String username = event.getUsername();
         List<InetSocketAddress> onlineUserList = new ArrayList<>();
         List<InetSocketAddress> removeList = new ArrayList<>();
@@ -53,24 +43,7 @@ public class PreLoginEventHandler implements EventHandler<PreLoginEvent> {
         });
         removeList.forEach(llsManager.players::remove);
 
-        boolean isFloodgateUser = false;
-        // 在安装了 Floodgate 的情况下
-        if (llsManager.hasFloodgate) {
-            try {
-                Object mcConnection = INITIAL_MINECRAFT_CONNECTION.get(event.getConnection());
-                Channel channel = (Channel) CHANNEL.get(mcConnection);
 
-                FloodgatePlayer player = (FloodgatePlayer) channel.attr(AttributeKey.valueOf("floodgate-player")).get();
-                // 只考虑链接了的情况
-                if (player != null && player.isLinked()) {
-                    username = player.getLinkedPlayer().getJavaUsername();
-                    isFloodgateUser = true;
-                }
-            } catch (IllegalAccessException e) {
-                // 正常不会走到这，反射时已经给过权限了
-                e.printStackTrace();
-            }
-        }
 
         if (llsManager.config.getWhitelist() && !llsManager.whitelist.query(username)) {
             event.setResult(PreLoginEvent.PreLoginComponentResult.denied(Component.translatable("multiplayer.disconnect.not_whitelisted").color(NamedTextColor.RED)));

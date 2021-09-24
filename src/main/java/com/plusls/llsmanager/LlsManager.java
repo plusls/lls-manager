@@ -9,7 +9,6 @@ import com.google.inject.name.Named;
 import com.plusls.llsmanager.command.*;
 import com.plusls.llsmanager.data.Config;
 import com.plusls.llsmanager.data.LlsPlayer;
-import com.plusls.llsmanager.data.LlsWhitelist;
 import com.plusls.llsmanager.handler.*;
 import com.plusls.llsmanager.minimapWorldSync.MinimapWorldSyncHandler;
 import com.plusls.llsmanager.seen.SeenHandler;
@@ -86,7 +85,10 @@ public class LlsManager {
     // 在线的玩家
     public final Map<InetSocketAddress, LlsPlayer> players = new ConcurrentHashMap<>();
 
-    public LlsWhitelist whitelist;
+    // 玩家缓存，不包含在线玩家
+    public static final int PLAYER_CACHE_SIZE = 10;
+    public final Map<String, LlsPlayer> playersCache = new ConcurrentHashMap<>();
+
 
     public Config config;
 
@@ -131,7 +133,6 @@ public class LlsManager {
         PlayerAvailableCommandsEventHandler.init(this);
         ServerPostConnectEventHandler.init(this);
 
-        LlsWhitelistCommand.register(this);
         LlsChannelCommand.register(this);
         LlsRegisterCommand.register(this);
         LlsLoginCommand.register(this);
@@ -153,6 +154,7 @@ public class LlsManager {
 
     private void load() {
         playerSet.clear();
+        playersCache.clear();
         // 检查并创建 player 目录
         Path playerDataDirPath = dataFolderPath.resolve("player");
         if (!Files.exists(playerDataDirPath)) {
@@ -177,13 +179,6 @@ public class LlsManager {
         // 同步配置文件为最新的
         config.save();
 
-        // 加载白名单
-        whitelist = new LlsWhitelist(dataFolderPath);
-        if (!whitelist.load()) {
-            logger.error("Lls-Manager load whitelist fail!");
-            throw new IllegalStateException("Lls-Manager init fail.");
-        }
-
         // 初始化用户列表
         try {
             Files.list(dataFolderPath.resolve("player")).forEach(path -> {
@@ -193,6 +188,12 @@ public class LlsManager {
         } catch (IOException e) {
             e.printStackTrace();
             throw new IllegalStateException(e);
+        }
+
+        // 重载用户
+        for (LlsPlayer llsPlayer: players.values()) {
+            llsPlayer.load();
+            llsPlayer.save();
         }
     }
 
@@ -276,13 +277,21 @@ public class LlsManager {
     }
 
     @NotNull
-    public LlsPlayer getLlsPlayer(String username) throws LlsManagerException {
+    public synchronized LlsPlayer getLlsPlayer(String username) throws LlsManagerException {
         LlsPlayer llsPlayer;
         Optional<Player> playerOptional = server.getPlayer(username);
         if (playerOptional.isPresent()) {
             llsPlayer = Objects.requireNonNull(players.get(playerOptional.get().getRemoteAddress()));
         } else {
-            llsPlayer = new LlsPlayer(username, dataFolderPath);
+            llsPlayer = playersCache.get(username);
+            if (llsPlayer == null) {
+                if (playersCache.size() > PLAYER_CACHE_SIZE) {
+                    playersCache.clear();
+                }
+                llsPlayer = new LlsPlayer(username, dataFolderPath);
+                playersCache.put(username, llsPlayer);
+            }
+
             if (!llsPlayer.hasUser()) {
                 throw new LlsManagerException(Component.translatable("lls-manager.text.player_not_found", NamedTextColor.RED).args(TextUtil.getUsernameComponent(username)));
             } else if (!llsPlayer.load()) {

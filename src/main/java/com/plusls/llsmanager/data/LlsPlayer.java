@@ -4,10 +4,8 @@ import com.plusls.llsmanager.LlsManager;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 
 public class LlsPlayer extends AbstractConfig<LlsPlayer.LlsPlayerData> {
@@ -40,15 +38,20 @@ public class LlsPlayer extends AbstractConfig<LlsPlayer.LlsPlayerData> {
 
 
     public static class LlsPlayerData {
-        public boolean onlineMode = llsManager.config.getDefaultOnlineMode();
-        public String password = "";
-        public String lastServerName = "";
-        public String channel = llsManager.config.getDefaultChannel();
-        public Date lastSeenTime = new Date();
+        private boolean onlineMode = llsManager.config.getDefaultOnlineMode();
+        private String password = "";
+        private String lastServerName = "";
+        private String channel = llsManager.config.getDefaultChannel();
+        private Date lastSeenTime = new Date();
+        private final ConcurrentSkipListSet<String> whitelistServerList = new ConcurrentSkipListSet<>();
     }
 
     public boolean hasUser() {
         return Files.exists(path);
+    }
+
+    public ConcurrentSkipListSet<String> getWhitelistServerList() {
+        return data.whitelistServerList;
     }
 
     public Date getLastSeenTime() {
