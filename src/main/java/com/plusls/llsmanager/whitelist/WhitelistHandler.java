@@ -14,6 +14,8 @@ import com.velocitypowered.api.proxy.Player;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 
+import java.util.Set;
+
 @Singleton
 public class WhitelistHandler {
     @Inject
@@ -46,10 +48,24 @@ public class WhitelistHandler {
         }
         // 如果白名服务器列表为空也断开连接
         // 如果是离线认证玩家则还需要保证 auth server 在白名单内
-        if (llsPlayer.getWhitelistServerList().isEmpty() || (!llsPlayer.getOnlineMode() && !llsPlayer.getWhitelistServerList().contains(llsManager.config.getAuthServerName()))) {
+        if (llsPlayer.getWhitelistServerList().isEmpty() || (!llsPlayer.getOnlineMode() && !checkServer(llsPlayer, llsManager.config.getAuthServerName()))) {
             event.setResult(PreLoginEvent.PreLoginComponentResult.denied(Component.translatable("multiplayer.disconnect.not_whitelisted").color(NamedTextColor.RED)));
         }
 
+    }
+
+    private boolean checkServer(LlsPlayer llsPlayer, String serverName) {
+        Set<String> whitelistServerList = llsPlayer.getWhitelistServerList();
+        if (whitelistServerList.contains(serverName)) {
+            return true;
+        }
+        for (String whitelistServerName : whitelistServerList) {
+            Set<String> serverGroup = llsManager.config.getServerGroup().get(whitelistServerName);
+            if (serverGroup != null && serverGroup.contains(serverName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Subscribe(order = PostOrder.EARLY)
@@ -68,7 +84,7 @@ public class WhitelistHandler {
 
         LlsPlayer llsPlayer = llsManager.getLlsPlayer(player);
 
-        if (!llsPlayer.getWhitelistServerList().contains(serverName)) {
+        if (!checkServer(llsPlayer, serverName)) {
             event.setResult(ServerPreConnectEvent.ServerResult.denied());
             player.sendMessage(Component.translatable("multiplayer.disconnect.not_whitelisted").color(NamedTextColor.RED));
             if (llsPlayer.getWhitelistServerList().isEmpty() || (!llsPlayer.getOnlineMode() && !llsPlayer.getWhitelistServerList().contains(llsManager.config.getAuthServerName()))) {

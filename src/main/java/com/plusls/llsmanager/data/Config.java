@@ -2,7 +2,9 @@ package com.plusls.llsmanager.data;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 public class Config extends AbstractConfig<Config.ConfigData> {
     private ConfigData config = new ConfigData();
@@ -23,31 +25,34 @@ public class Config extends AbstractConfig<Config.ConfigData> {
 
     public static class ConfigData {
         // 是否在 TabList 显示子服玩家
-        public boolean showAllPlayerInTabList = false;
+        private boolean showAllPlayerInTabList = false;
         // 是否同步聊天信息
-        public boolean bridgeChatMessage = false;
+        private boolean bridgeChatMessage = false;
         // 是否同步玩家加入信息
-        public boolean bridgePlayerJoinMessage = false;
+        private boolean bridgePlayerJoinMessage = false;
         // 是否同步玩家离开信息
-        public boolean bridgePlayerLeaveMessage = false;
+        private boolean bridgePlayerLeaveMessage = false;
         // 白名单
-        public boolean whitelist = false;
+        private boolean whitelist = false;
         // 默认为在线模式
-        public boolean defaultOnlineMode = true;
+        private boolean defaultOnlineMode = true;
         // 默认聊天频道
-        public String defaultChannel = LlsPlayer.SERVER;
+        private String defaultChannel = LlsPlayer.SERVER;
         // 离线认证服务器名字
-        public String authServerName = "lls-auth";
+        private String authServerName = "lls-auth";
         // 接受聊天信息的 channel
-        public ConcurrentLinkedQueue<String> chatMessageChannelList = new ConcurrentLinkedQueue<>();
+        private final ConcurrentLinkedQueue<String> chatMessageChannelList = new ConcurrentLinkedQueue<>();
         // 服务器内部互相传递信息的 channel
-        public ConcurrentLinkedQueue<String> bridgeMessageChannelList = new ConcurrentLinkedQueue<>();
+        private final ConcurrentLinkedQueue<String> bridgeMessageChannelList = new ConcurrentLinkedQueue<>();
         // 接受离开信息的 channel
-        public ConcurrentLinkedQueue<String> leaveMessageChannelList = new ConcurrentLinkedQueue<>();
+        private final ConcurrentLinkedQueue<String> leaveMessageChannelList = new ConcurrentLinkedQueue<>();
         // 接受加入游戏信息的 channel
-        public ConcurrentLinkedQueue<String> joinMessageChannelList = new ConcurrentLinkedQueue<>();
+        private final ConcurrentLinkedQueue<String> joinMessageChannelList = new ConcurrentLinkedQueue<>();
         // 启用小地图同步
-        public boolean minimapWorldSync = false;
+        private boolean minimapWorldSync = false;
+        // 服务器组
+        private final ConcurrentHashMap<String, ConcurrentSkipListSet<String>> serverGroup = new ConcurrentHashMap<>();
+
 
         public ConfigData() {
             chatMessageChannelList.add(LlsPlayer.SERVER);
@@ -59,6 +64,10 @@ public class Config extends AbstractConfig<Config.ConfigData> {
             joinMessageChannelList.add(LlsPlayer.SERVER);
             joinMessageChannelList.add(LlsPlayer.GLOBAL);
         }
+    }
+
+    public ConcurrentHashMap<String, ConcurrentSkipListSet<String>> getServerGroup() {
+        return config.serverGroup;
     }
 
     public boolean getMinimapWorldSync() {

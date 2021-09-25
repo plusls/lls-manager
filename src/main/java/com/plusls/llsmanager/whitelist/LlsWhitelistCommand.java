@@ -89,6 +89,13 @@ public class LlsWhitelistCommand {
                         }
                     }
             );
+            llsManager.config.getServerGroup().keySet().forEach(
+                    serverGroup -> {
+                        if (serverGroup.contains(builder.getRemaining()) && !llsPlayer.getWhitelistServerList().contains(serverGroup)) {
+                            builder.suggest(serverGroup);
+                        }
+                    }
+            );
             return builder.buildFuture();
         }
 
@@ -103,7 +110,7 @@ public class LlsWhitelistCommand {
             } catch (LoadPlayerFailException | PlayerNotFoundException e) {
                 source.sendMessage(Component.translatable("lls-manager.command.lls_whitelist.add.failure")
                         .color(NamedTextColor.RED)
-                        .args(TextUtil.getServerNameComponent(serverName), TextUtil.getUsernameComponent(username)));
+                        .args(TextUtil.getServerAutoComponent(serverName), TextUtil.getUsernameComponent(username)));
                 source.sendMessage(e.message);
                 return 0;
             }
@@ -111,19 +118,19 @@ public class LlsWhitelistCommand {
             if (whitelistServerList.contains(serverName)) {
                 source.sendMessage(Component.translatable("lls-manager.command.lls_whitelist.add.already_in_whitelist")
                         .color(NamedTextColor.RED)
-                        .args(TextUtil.getServerNameComponent(serverName), TextUtil.getUsernameComponent(username)));
+                        .args(TextUtil.getServerAutoComponent(serverName), TextUtil.getUsernameComponent(username)));
                 return 0;
             } else {
                 whitelistServerList.add(serverName);
                 if (!llsPlayer.save()) {
                     source.sendMessage(Component.translatable("lls-manager.command.lls_whitelist.add.failure")
                             .color(NamedTextColor.RED)
-                            .args(TextUtil.getServerNameComponent(serverName), TextUtil.getUsernameComponent(username)));
+                            .args(TextUtil.getServerAutoComponent(serverName), TextUtil.getUsernameComponent(username)));
                     return 0;
                 } else {
                     source.sendMessage(Component.translatable("lls-manager.command.lls_whitelist.add.success")
                             .color(NamedTextColor.GREEN)
-                            .args(TextUtil.getServerNameComponent(serverName), TextUtil.getUsernameComponent(username)));
+                            .args(TextUtil.getServerAutoComponent(serverName), TextUtil.getUsernameComponent(username)));
                     return 1;
                 }
             }
@@ -173,6 +180,13 @@ public class LlsWhitelistCommand {
                         }
                     }
             );
+            llsManager.config.getServerGroup().keySet().forEach(
+                    serverGroup -> {
+                        if (serverGroup.contains(builder.getRemaining()) && llsPlayer.getWhitelistServerList().contains(serverGroup)) {
+                            builder.suggest(serverGroup);
+                        }
+                    }
+            );
             return builder.buildFuture();
         }
 
@@ -187,7 +201,7 @@ public class LlsWhitelistCommand {
             } catch (LoadPlayerFailException | PlayerNotFoundException e) {
                 source.sendMessage(Component.translatable("lls-manager.command.lls_whitelist.remove.failure")
                         .color(NamedTextColor.RED)
-                        .args(TextUtil.getServerNameComponent(serverName), TextUtil.getUsernameComponent(username)));
+                        .args(TextUtil.getServerAutoComponent(serverName), TextUtil.getUsernameComponent(username)));
                 source.sendMessage(e.message);
                 return 0;
             }
@@ -196,19 +210,19 @@ public class LlsWhitelistCommand {
             if (!whitelistServerList.contains(serverName)) {
                 source.sendMessage(Component.translatable("lls-manager.command.lls_whitelist.remove.not_in_whitelist")
                         .color(NamedTextColor.RED)
-                        .args(TextUtil.getServerNameComponent(serverName), TextUtil.getUsernameComponent(username)));
+                        .args(TextUtil.getServerAutoComponent(serverName), TextUtil.getUsernameComponent(username)));
                 return 0;
             } else {
                 whitelistServerList.remove(serverName);
                 if (!llsPlayer.save()) {
                     source.sendMessage(Component.translatable("lls-manager.command.lls_whitelist.remove.failure")
                             .color(NamedTextColor.RED)
-                            .args(TextUtil.getServerNameComponent(serverName), TextUtil.getUsernameComponent(username)));
+                            .args(TextUtil.getServerAutoComponent(serverName), TextUtil.getUsernameComponent(username)));
                     return 0;
                 } else {
                     source.sendMessage(Component.translatable("lls-manager.command.lls_whitelist.remove.success")
                             .color(NamedTextColor.GREEN)
-                            .args(TextUtil.getServerNameComponent(serverName), TextUtil.getUsernameComponent(username)));
+                            .args(TextUtil.getServerAutoComponent(serverName), TextUtil.getUsernameComponent(username)));
                     return 1;
                 }
             }
@@ -250,13 +264,13 @@ public class LlsWhitelistCommand {
                 boolean first = true;
                 for (String serverName : llsPlayer.getWhitelistServerList()) {
                     HoverEvent<Component> hoverEvent = HoverEvent.showText(Component.translatable("lls-manager.command.lls_whitelist.list.hover_event_info")
-                            .args(TextUtil.getServerNameComponent(username)));
+                            .args(TextUtil.getServerAutoComponent(serverName), TextUtil.getUsernameComponent(username)));
                     ClickEvent clickEvent = ClickEvent.suggestCommand(String.format("/lls_whitelist remove %s %s", username, serverName));
                     if (!first) {
                         component.append(Component.text(", "));
                     }
                     first = false;
-                    component.append(TextUtil.getServerNameComponent(serverName))
+                    component.append(TextUtil.getServerAutoComponent(serverName))
                             .append(Component.text("[X]").color(NamedTextColor.GRAY)
                                     .hoverEvent(hoverEvent)
                                     .clickEvent(clickEvent));
