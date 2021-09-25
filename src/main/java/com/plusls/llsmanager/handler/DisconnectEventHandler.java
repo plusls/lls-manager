@@ -4,7 +4,6 @@ import com.plusls.llsmanager.LlsManager;
 import com.plusls.llsmanager.data.LlsPlayer;
 import com.plusls.llsmanager.util.BridgeUtil;
 import com.velocitypowered.api.event.EventHandler;
-import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.proxy.Player;
 
@@ -19,7 +18,7 @@ public class DisconnectEventHandler implements EventHandler<DisconnectEvent> {
     @Override
     public void execute(DisconnectEvent event) {
         Player player = event.getPlayer();
-        LlsPlayer llsPlayer = llsManager.players.get(player.getRemoteAddress());
+        LlsPlayer llsPlayer = llsManager.getLlsPlayer(player);
         String serverName = llsPlayer.getLastServerName();
         BridgeUtil.sendLeaveMessage(serverName, player);
     }

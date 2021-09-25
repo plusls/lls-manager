@@ -52,7 +52,7 @@ public class LlsChannelCommand {
                             LlsPlayer.channelList.forEach(name -> channelMap.put(name, new ArrayList<>()));
                             for (Player player : llsManager.server.getAllPlayers()) {
                                 String username = player.getUsername();
-                                LlsPlayer llsPlayer = llsManager.players.get(player.getRemoteAddress());
+                                LlsPlayer llsPlayer = llsManager.getLlsPlayer(player);
                                 // 在加载配置时会检查 channel 是否合法，因此这里不会出问题
                                 channelMap.get(llsPlayer.getChannel()).add(username);
                             }

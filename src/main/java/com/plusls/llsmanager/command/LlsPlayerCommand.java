@@ -9,6 +9,8 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.plusls.llsmanager.LlsManager;
 import com.plusls.llsmanager.data.LlsPlayer;
 import com.plusls.llsmanager.util.CommandUtil;
+import com.plusls.llsmanager.util.LoadPlayerFailException;
+import com.plusls.llsmanager.util.PlayerNotFoundException;
 import com.plusls.llsmanager.util.TextUtil;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
@@ -70,10 +72,14 @@ public class LlsPlayerCommand {
     private static int resetPassword(CommandContext<CommandSource> context) {
         String username = context.getArgument("username", String.class);
         CommandSource commandSource = context.getSource();
-        LlsPlayer llsPlayer = CommandUtil.getLlsPlayer(username, commandSource);
-        if (llsPlayer == null) {
+        LlsPlayer llsPlayer;
+        try {
+            llsPlayer = llsManager.getLlsPlayer(username);
+        } catch (LoadPlayerFailException | PlayerNotFoundException e) {
+            commandSource.sendMessage(e.message);
             return 0;
         }
+
         if (llsPlayer.setPassword("")) {
             commandSource.sendMessage(Component.translatable("lls-manager.command.lls_player.reset_password.success").args(TextUtil.getUsernameComponent(username)));
             return 1;
@@ -87,10 +93,14 @@ public class LlsPlayerCommand {
     private static int setOnlineMode(CommandContext<CommandSource> context) {
         String username = context.getArgument("username", String.class);
         CommandSource commandSource = context.getSource();
-        LlsPlayer llsPlayer = CommandUtil.getLlsPlayer(username, commandSource);
-        if (llsPlayer == null) {
+        LlsPlayer llsPlayer;
+        try {
+            llsPlayer = llsManager.getLlsPlayer(username);
+        } catch (LoadPlayerFailException | PlayerNotFoundException e) {
+            commandSource.sendMessage(e.message);
             return 0;
         }
+
         Boolean onlineMode = context.getArgument("status", Boolean.class);
         if (llsPlayer.setOnlineMode(onlineMode)) {
             commandSource.sendMessage(Component.translatable("lls-manager.command.lls_player.success").args(TextUtil.getUsernameComponent(username),

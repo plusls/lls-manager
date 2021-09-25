@@ -6,5 +6,6 @@ import net.kyori.adventure.text.Component;
 public class LoadPlayerFailException extends LlsManagerException {
     public LoadPlayerFailException(Component message) {
         super(message);
+        this.printStackTrace();
     }
 }

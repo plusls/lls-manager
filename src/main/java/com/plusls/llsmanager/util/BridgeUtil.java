@@ -22,7 +22,7 @@ public class BridgeUtil {
                 if (exclude != null && exclude.test(player, server)) {
                     continue;
                 }
-                LlsPlayer llsPlayerToSend = llsManager.players.get(player.getRemoteAddress());
+                LlsPlayer llsPlayerToSend = llsManager.getLlsPlayer(player);
                 if (channelList.contains(llsPlayerToSend.getChannel())) {
                     player.sendMessage(componentLike);
                 }

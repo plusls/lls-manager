@@ -78,10 +78,7 @@ public class LlsWhitelistCommand {
             LlsPlayer llsPlayer;
             try {
                 llsPlayer = llsManager.getLlsPlayer(username);
-            } catch (LoadPlayerFailException e) {
-                e.printStackTrace();
-                return builder.buildFuture();
-            } catch (PlayerNotFoundException e) {
+            } catch (LoadPlayerFailException | PlayerNotFoundException e) {
                 return builder.buildFuture();
             }
             llsManager.server.getAllServers().forEach(
@@ -165,10 +162,7 @@ public class LlsWhitelistCommand {
             LlsPlayer llsPlayer;
             try {
                 llsPlayer = llsManager.getLlsPlayer(username);
-            } catch (LoadPlayerFailException e) {
-                e.printStackTrace();
-                return builder.buildFuture();
-            } catch (PlayerNotFoundException e) {
+            } catch (LoadPlayerFailException | PlayerNotFoundException e) {
                 return builder.buildFuture();
             }
             llsManager.server.getAllServers().forEach(
@@ -244,7 +238,6 @@ public class LlsWhitelistCommand {
                 try {
                     llsPlayer = llsManager.getLlsPlayer(username);
                 } catch (LoadPlayerFailException | PlayerNotFoundException e) {
-                    e.printStackTrace();
                     source.sendMessage(e.message);
                     return 0;
                 }

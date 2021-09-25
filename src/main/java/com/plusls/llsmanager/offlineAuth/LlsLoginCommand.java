@@ -1,6 +1,7 @@
 package com.plusls.llsmanager.offlineAuth;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
@@ -19,6 +20,7 @@ import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.Optional;
 
+@Singleton
 public class LlsLoginCommand implements Command {
 
     @Inject
@@ -34,7 +36,7 @@ public class LlsLoginCommand implements Command {
         return LiteralArgumentBuilder
                 .<CommandSource>literal("lls_login")
                 .requires(commandSource -> commandSource instanceof Player player &&
-                        llsManager.players.get(player.getRemoteAddress()).status != LlsPlayer.Status.LOGGED_IN)
+                        llsManager.getLlsPlayer(player).status != LlsPlayer.Status.LOGGED_IN)
                 .then(RequiredArgumentBuilder.<CommandSource, String>argument("password", StringArgumentType.string())
                         .executes(this));
     }
@@ -42,7 +44,7 @@ public class LlsLoginCommand implements Command {
     @Override
     public int run(CommandContext<CommandSource> commandContext) {
         Player player = (Player) commandContext.getSource();
-        LlsPlayer llsPlayer = llsManager.players.get(player.getRemoteAddress());
+        LlsPlayer llsPlayer = llsManager.getLlsPlayer(player);
         String password = commandContext.getArgument("password", String.class);
         if (!BCrypt.checkpw(password, llsPlayer.getPassword())) {
             player.sendMessage(Component.translatable("lls-manager.command.lls_login.password_error", NamedTextColor.RED));

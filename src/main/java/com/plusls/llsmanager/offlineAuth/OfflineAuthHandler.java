@@ -35,9 +35,8 @@ public class OfflineAuthHandler {
     @Subscribe
     public void onPreLoginEvent(PreLoginEvent event) {
         // 新用户连接时清理连接池
-        llsManager.players.entrySet().removeIf(
-                entry -> llsManager.server.getPlayer(entry.getValue().username).isEmpty()
-        );
+        llsManager.autoRemovePlayers();
+
         // 如果别的插件阻止了，那就不需要做
         if (event.getResult() != PreLoginEvent.PreLoginComponentResult.allowed()) {
             return;
@@ -75,7 +74,7 @@ public class OfflineAuthHandler {
         }
 
         // 在这 put 的原因在于，在这会初始化 llsPlayer 的状态，在后续登录阶段需要使用
-        llsManager.players.put(event.getConnection().getRemoteAddress(), llsPlayer);
+        llsManager.addLlsPlayer(event.getConnection(), llsPlayer);
 
         // 在登陆服务器后 ServerConnectedEvent 时会保存最后登陆的服务器，会将用户配置写入 json
         // 因此在这无需保存用户信息
@@ -86,7 +85,7 @@ public class OfflineAuthHandler {
     @Subscribe
     public void onCommandExecute(CommandExecuteEvent event) {
         if (event.getCommandSource() instanceof Player player) {
-            LlsPlayer.Status status = llsManager.players.get(player.getRemoteAddress()).status;
+            LlsPlayer.Status status = llsManager.getLlsPlayer(player).status;
             String commandName = event.getCommand().split(" ")[0];
             if (status != LlsPlayer.Status.LOGGED_IN) {
                 if (!(status == LlsPlayer.Status.NEED_REGISTER && commandName.equals("lls_register")) &&
@@ -99,7 +98,7 @@ public class OfflineAuthHandler {
 
     @Subscribe
     public void onPlayerAvailableCommands(PlayerAvailableCommandsEvent event) {
-        LlsPlayer.Status status = llsManager.players.get(event.getPlayer().getRemoteAddress()).status;
+        LlsPlayer.Status status = llsManager.getLlsPlayer(event.getPlayer()).status;
         event.getRootNode().getChildren().removeIf(
                 commandNode -> {
                     String commandName = commandNode.getName();
@@ -114,7 +113,7 @@ public class OfflineAuthHandler {
     @Subscribe
     public void onServerPostConnect(ServerPostConnectEvent event) {
         Player player = event.getPlayer();
-        LlsPlayer llsPlayer = llsManager.players.get(player.getRemoteAddress());
+        LlsPlayer llsPlayer = llsManager.getLlsPlayer(player);
 
         if (llsPlayer.status == LlsPlayer.Status.NEED_LOGIN) {
             player.sendMessage(Component.translatable("lls-manager.command.lls_login.hint"));
@@ -126,7 +125,7 @@ public class OfflineAuthHandler {
 
     @Subscribe(order = PostOrder.LATE)
     public void onDisconnect(DisconnectEvent event) {
-        llsManager.players.remove(event.getPlayer().getRemoteAddress());
+        llsManager.autoRemovePlayers();
     }
 
 }

@@ -66,15 +66,7 @@ public class WhitelistHandler {
 
         Player player = event.getPlayer();
 
-        LlsPlayer llsPlayer;
-        try {
-            llsPlayer = llsManager.getLlsPlayer(player.getUsername());
-        } catch (LoadPlayerFailException | PlayerNotFoundException e) {
-            event.setResult(ServerPreConnectEvent.ServerResult.denied());
-            player.sendMessage(e.message);
-            e.printStackTrace();
-            return;
-        }
+        LlsPlayer llsPlayer = llsManager.getLlsPlayer(player);
 
         if (!llsPlayer.getWhitelistServerList().contains(serverName)) {
             event.setResult(ServerPreConnectEvent.ServerResult.denied());

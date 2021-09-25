@@ -3,43 +3,20 @@ package com.plusls.llsmanager.util;
 import com.plusls.llsmanager.LlsManager;
 import com.plusls.llsmanager.data.LlsPlayer;
 import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.proxy.Player;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
-import java.util.Optional;
 
 public class CommandUtil {
-    @Nullable
-    public static LlsPlayer getLlsPlayer(String username, @Nullable CommandSource source) {
-        LlsManager llsManager = Objects.requireNonNull(LlsManager.getInstance());
-        LlsPlayer llsPlayer;
-        Optional<Player> playerOptional = llsManager.server.getPlayer(username);
-        if (playerOptional.isPresent()) {
-            llsPlayer = llsManager.players.get(playerOptional.get().getRemoteAddress());
-        } else {
-            llsPlayer = new LlsPlayer(username, llsManager.dataFolderPath);
-            if (!llsPlayer.hasUser()) {
-                if (source != null) {
-                    source.sendMessage(Component.translatable("lls-manager.text.player_not_found", NamedTextColor.RED).args(TextUtil.getUsernameComponent(username)));
-                }
-                return null;
-            } else if (!llsPlayer.load()) {
-                if (source != null) {
-                    source.sendMessage(Component.translatable("lls-manager.text.load_player_data_fail").args(TextUtil.getUsernameComponent(username)));
-                }
-                return null;
-            }
-        }
-        return llsPlayer;
-    }
 
     public static boolean setChannel(String channel, String username, CommandSource source) {
         LlsManager llsManager = Objects.requireNonNull(LlsManager.getInstance());
-        LlsPlayer llsPlayer = getLlsPlayer(username, source);
-        if (llsPlayer == null) {
+        LlsPlayer llsPlayer;
+        try {
+            llsPlayer = llsManager.getLlsPlayer(username);
+        } catch (LoadPlayerFailException | PlayerNotFoundException e) {
+            source.sendMessage(e.message);
             return false;
         }
         if (!LlsPlayer.channelList.contains(channel)) {

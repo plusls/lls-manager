@@ -29,7 +29,7 @@ public class PlayerChatEventHandler implements EventHandler<PlayerChatEvent> {
         String username = player.getUsername();
         String message = event.getMessage();
 
-        LlsPlayer llsPlayer = llsManager.players.get(player.getRemoteAddress());
+        LlsPlayer llsPlayer = llsManager.getLlsPlayer(player);
 
         String channel = llsPlayer.getChannel();
         if (!llsManager.config.getBridgeMessageChannel().contains(channel)) {

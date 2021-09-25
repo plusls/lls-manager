@@ -22,7 +22,7 @@ public class ServerConnectedEventHandler implements EventHandler<ServerConnected
         String username = player.getUsername();
         RegisteredServer server = event.getServer();
         String serverName = server.getServerInfo().getName();
-        LlsPlayer llsPlayer = llsManager.players.get(player.getRemoteAddress());
+        LlsPlayer llsPlayer = llsManager.getLlsPlayer(player);
 
         event.getPreviousServer().ifPresent(registeredServer -> {
             String previousServerName = registeredServer.getServerInfo().getName();

@@ -26,7 +26,7 @@ public class SeenHandler {
     public void onDisconnect(DisconnectEvent event) {
         Player player = event.getPlayer();
         String username = player.getUsername();
-        LlsPlayer llsPlayer = Objects.requireNonNull(llsManager.players.get(player.getRemoteAddress()));
+        LlsPlayer llsPlayer = llsManager.getLlsPlayer(player);
         // TODO 离开通知 API
         if (llsPlayer.status != LlsPlayer.Status.LOGGED_IN) {
             return;

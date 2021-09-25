@@ -33,6 +33,7 @@ import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
+import com.velocitypowered.api.proxy.InboundConnection;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import net.kyori.adventure.key.Key;
@@ -90,8 +91,8 @@ public class LlsManager {
     @Nullable
     private static LlsManager instance;
 
-    // 在线的玩家
-    public final Map<InetSocketAddress, LlsPlayer> players = new ConcurrentHashMap<>();
+    // 连接过的玩家
+    private final Map<InetSocketAddress, LlsPlayer> players = new ConcurrentHashMap<>();
 
     // 玩家缓存，不包含在线玩家
     public static final int PLAYER_CACHE_SIZE = 10;
@@ -277,6 +278,11 @@ public class LlsManager {
     }
 
     @NotNull
+    public LlsPlayer getLlsPlayer(InboundConnection connection) {
+        return Objects.requireNonNull(players.get(connection.getRemoteAddress()));
+    }
+
+    @NotNull
     public synchronized LlsPlayer getLlsPlayer(String username) throws PlayerNotFoundException, LoadPlayerFailException {
         LlsPlayer llsPlayer;
         Optional<Player> playerOptional = server.getPlayer(username);
@@ -299,6 +305,20 @@ public class LlsManager {
             }
         }
         return llsPlayer;
+    }
+
+    public void autoRemovePlayers() {
+        players.forEach((key, value) -> {
+            if (server.getPlayer(value.username).isEmpty()) {
+                logger.warn("remove {}", value.username);
+            }
+        });
+
+        players.entrySet().removeIf(entry -> server.getPlayer(entry.getValue().username).isEmpty());
+    }
+
+    public void addLlsPlayer(InboundConnection connection, LlsPlayer llsPlayer) {
+        players.put(connection.getRemoteAddress(), llsPlayer);
     }
 
 }

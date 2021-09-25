@@ -34,7 +34,7 @@ public class LlsRegisterCommand implements Command {
         return LiteralArgumentBuilder
                 .<CommandSource>literal("lls_register")
                 .requires(commandSource -> commandSource instanceof Player player &&
-                        llsManager.players.get(player.getRemoteAddress()).status == LlsPlayer.Status.NEED_REGISTER)
+                        llsManager.getLlsPlayer(player).status == LlsPlayer.Status.NEED_REGISTER)
                 .then(RequiredArgumentBuilder.<CommandSource, String>argument("password", StringArgumentType.string()).then(
                         RequiredArgumentBuilder.<CommandSource, String>argument("passwordConfirm", StringArgumentType.string())
                                 .executes(this)));
@@ -44,7 +44,7 @@ public class LlsRegisterCommand implements Command {
     public int run(CommandContext<CommandSource> commandContext) {
         Player player = (Player) commandContext.getSource();
 
-        LlsPlayer llsPlayer = llsManager.players.get(player.getRemoteAddress());
+        LlsPlayer llsPlayer = llsManager.getLlsPlayer(player);
         String password = commandContext.getArgument("password", String.class);
         String passwordConfirm = commandContext.getArgument("passwordConfirm", String.class);
         if (!password.equals(passwordConfirm)) {
