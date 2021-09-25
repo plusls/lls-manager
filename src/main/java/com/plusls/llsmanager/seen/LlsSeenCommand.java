@@ -12,7 +12,8 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.plusls.llsmanager.LlsManager;
 import com.plusls.llsmanager.command.Command;
-import com.plusls.llsmanager.util.LlsManagerException;
+import com.plusls.llsmanager.util.LoadPlayerFailException;
+import com.plusls.llsmanager.util.PlayerNotFoundException;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import net.kyori.adventure.text.Component;
@@ -61,7 +62,7 @@ public class LlsSeenCommand {
                 SeenData seenData = SeenUtil.getSeenData(llsManager, username);
                 commandSource.sendMessage(seenData.text);
                 return 1;
-            } catch (LlsManagerException e) {
+            } catch (LoadPlayerFailException | PlayerNotFoundException e) {
                 commandSource.sendMessage(e.message);
                 return 0;
             }
@@ -88,7 +89,7 @@ public class LlsSeenCommand {
             List<SeenData> allSeenData;
             try {
                 allSeenData = SeenUtil.getAllSeenData(llsManager);
-            } catch (LlsManagerException e) {
+            } catch (LoadPlayerFailException | PlayerNotFoundException e) {
                 commandSource.sendMessage(e.message);
                 return 0;
             }
@@ -142,7 +143,7 @@ public class LlsSeenCommand {
             List<SeenData> allSeenData;
             try {
                 allSeenData = SeenUtil.getAllSeenData(llsManager);
-            } catch (LlsManagerException e) {
+            } catch (LoadPlayerFailException | PlayerNotFoundException e) {
                 commandSource.sendMessage(e.message);
                 return 0;
             }

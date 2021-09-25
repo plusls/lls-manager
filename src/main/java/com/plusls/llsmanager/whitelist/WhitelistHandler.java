@@ -4,7 +4,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.plusls.llsmanager.LlsManager;
 import com.plusls.llsmanager.data.LlsPlayer;
-import com.plusls.llsmanager.util.LlsManagerException;
+import com.plusls.llsmanager.util.LoadPlayerFailException;
+import com.plusls.llsmanager.util.PlayerNotFoundException;
 import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
@@ -36,11 +37,19 @@ public class WhitelistHandler {
         String username = ConnectionUtil.getUsername(llsManager, event.getUsername(), event.getConnection());
 
         // 如果没有这个用户，则说明它不在白名内，直接断开连接
+        LlsPlayer llsPlayer;
         try {
-            llsManager.getLlsPlayer(username);
-        } catch (LlsManagerException e) {
+            llsPlayer = llsManager.getLlsPlayer(username);
+        } catch (LoadPlayerFailException | PlayerNotFoundException e) {
+            event.setResult(PreLoginEvent.PreLoginComponentResult.denied(Component.translatable("multiplayer.disconnect.not_whitelisted").color(NamedTextColor.RED)));
+            return;
+        }
+        // 如果白名服务器列表为空也断开连接
+        // 如果是离线认证玩家则还需要保证 auth server 在白名单内
+        if (llsPlayer.getWhitelistServerList().isEmpty() || (!llsPlayer.getOnlineMode() && !llsPlayer.getWhitelistServerList().contains(llsManager.config.getAuthServerName()))) {
             event.setResult(PreLoginEvent.PreLoginComponentResult.denied(Component.translatable("multiplayer.disconnect.not_whitelisted").color(NamedTextColor.RED)));
         }
+
     }
 
     @Subscribe(order = PostOrder.EARLY)
@@ -54,16 +63,13 @@ public class WhitelistHandler {
             return;
         }
         String serverName = event.getResult().getServer().get().getServerInfo().getName();
-        // 登陆服无需检查
-        if (serverName.equals(llsManager.config.getAuthServerName())) {
-            return;
-        }
+
         Player player = event.getPlayer();
 
         LlsPlayer llsPlayer;
         try {
             llsPlayer = llsManager.getLlsPlayer(player.getUsername());
-        } catch (LlsManagerException e) {
+        } catch (LoadPlayerFailException | PlayerNotFoundException e) {
             event.setResult(ServerPreConnectEvent.ServerResult.denied());
             player.sendMessage(e.message);
             e.printStackTrace();
@@ -73,6 +79,9 @@ public class WhitelistHandler {
         if (!llsPlayer.getWhitelistServerList().contains(serverName)) {
             event.setResult(ServerPreConnectEvent.ServerResult.denied());
             player.sendMessage(Component.translatable("multiplayer.disconnect.not_whitelisted").color(NamedTextColor.RED));
+            if (llsPlayer.getWhitelistServerList().isEmpty() || (!llsPlayer.getOnlineMode() && !llsPlayer.getWhitelistServerList().contains(llsManager.config.getAuthServerName()))) {
+                player.disconnect(Component.translatable("multiplayer.disconnect.not_whitelisted").color(NamedTextColor.RED));
+            }
         }
     }
 

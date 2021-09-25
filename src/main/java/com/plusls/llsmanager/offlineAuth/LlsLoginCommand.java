@@ -1,11 +1,13 @@
-package com.plusls.llsmanager.command;
+package com.plusls.llsmanager.offlineAuth;
 
+import com.google.inject.Inject;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.plusls.llsmanager.LlsManager;
+import com.plusls.llsmanager.command.Command;
 import com.plusls.llsmanager.data.LlsPlayer;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
@@ -17,36 +19,37 @@ import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.Optional;
 
-public class LlsLoginCommand {
+public class LlsLoginCommand implements Command {
 
-    private static LlsManager llsManager;
+    @Inject
+    LlsManager llsManager;
 
-    public static void register(LlsManager llsManager) {
-        LlsLoginCommand.llsManager = llsManager;
-        llsManager.commandManager.register(createBrigadierCommand());
-    }
-
-    private static BrigadierCommand createBrigadierCommand() {
-        LiteralCommandNode<CommandSource> llsLoginNode = LiteralArgumentBuilder
-                .<CommandSource>literal("lls_login").requires(
-                        commandSource -> commandSource instanceof Player player &&
-                                llsManager.players.get(player.getRemoteAddress()).status != LlsPlayer.Status.LOGGED_IN
-                )
-                .then(RequiredArgumentBuilder.<CommandSource, String>argument("password", StringArgumentType.string())
-                        .executes(LlsLoginCommand::llsLogin)).build();
+    public BrigadierCommand createBrigadierCommand() {
+        LiteralCommandNode<CommandSource> llsLoginNode = createSubCommand().build();
         return new BrigadierCommand(llsLoginNode);
     }
 
-    private static int llsLogin(CommandContext<CommandSource> context) {
-        Player player = (Player) context.getSource();
+    @Override
+    public LiteralArgumentBuilder<CommandSource> createSubCommand() {
+        return LiteralArgumentBuilder
+                .<CommandSource>literal("lls_login")
+                .requires(commandSource -> commandSource instanceof Player player &&
+                        llsManager.players.get(player.getRemoteAddress()).status != LlsPlayer.Status.LOGGED_IN)
+                .then(RequiredArgumentBuilder.<CommandSource, String>argument("password", StringArgumentType.string())
+                        .executes(this));
+    }
+
+    @Override
+    public int run(CommandContext<CommandSource> commandContext) {
+        Player player = (Player) commandContext.getSource();
         LlsPlayer llsPlayer = llsManager.players.get(player.getRemoteAddress());
-        String password = context.getArgument("password", String.class);
+        String password = commandContext.getArgument("password", String.class);
         if (!BCrypt.checkpw(password, llsPlayer.getPassword())) {
-            context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_login.password_error", NamedTextColor.RED));
+            player.sendMessage(Component.translatable("lls-manager.command.lls_login.password_error", NamedTextColor.RED));
             return 0;
         }
         llsPlayer.status = LlsPlayer.Status.LOGGED_IN;
-        context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_login.success", NamedTextColor.GREEN));
+        player.sendMessage(Component.translatable("lls-manager.command.lls_login.success", NamedTextColor.GREEN));
         Optional<RegisteredServer> registeredServerOptional = llsManager.server.getServer(llsPlayer.getLastServerName());
         registeredServerOptional.ifPresent(registeredServer -> player.createConnectionRequest(registeredServer).connect());
         return 1;

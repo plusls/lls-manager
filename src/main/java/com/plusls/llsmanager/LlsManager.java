@@ -6,15 +6,23 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.plusls.llsmanager.command.*;
+import com.plusls.llsmanager.command.LlsChannelCommand;
+import com.plusls.llsmanager.command.LlsCreatePlayerCommand;
+import com.plusls.llsmanager.command.LlsPlayerCommand;
 import com.plusls.llsmanager.data.Config;
 import com.plusls.llsmanager.data.LlsPlayer;
-import com.plusls.llsmanager.handler.*;
+import com.plusls.llsmanager.handler.DisconnectEventHandler;
+import com.plusls.llsmanager.handler.PlayerChatEventHandler;
+import com.plusls.llsmanager.handler.PlayerChooseInitialServerEventHandler;
+import com.plusls.llsmanager.handler.ServerConnectedEventHandler;
 import com.plusls.llsmanager.minimapWorldSync.MinimapWorldSyncHandler;
+import com.plusls.llsmanager.offlineAuth.OfflineAuthHandler;
 import com.plusls.llsmanager.seen.SeenHandler;
 import com.plusls.llsmanager.tabListSync.TabListSyncHandler;
-import com.plusls.llsmanager.util.LlsManagerException;
+import com.plusls.llsmanager.util.LoadPlayerFailException;
+import com.plusls.llsmanager.util.PlayerNotFoundException;
 import com.plusls.llsmanager.util.TextUtil;
+import com.plusls.llsmanager.whitelist.WhitelistHandler;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.Subscribe;
@@ -120,23 +128,15 @@ public class LlsManager {
         SeenHandler.init(this);
         TabListSyncHandler.init(this);
         MinimapWorldSyncHandler.init(this);
+        WhitelistHandler.init(this);
+        OfflineAuthHandler.init(this);
 
         PlayerChooseInitialServerEventHandler.init(this);
         ServerConnectedEventHandler.init(this);
         PlayerChatEventHandler.init(this);
-        PreLoginEventHandler.init(this);
-        PostLoginEventHandler.init(this);
         DisconnectEventHandler.init(this);
-        ServerPreConnectEventHandler.init(this);
-        LoginEventHandler.init(this);
-        CommandExecuteEventHandler.init(this);
-        PlayerAvailableCommandsEventHandler.init(this);
-        ServerPostConnectEventHandler.init(this);
 
         LlsChannelCommand.register(this);
-        LlsRegisterCommand.register(this);
-        LlsLoginCommand.register(this);
-        LlsPasswdCommand.register(this);
         LlsPlayerCommand.register(this);
         LlsCreatePlayerCommand.register(this);
 
@@ -191,7 +191,7 @@ public class LlsManager {
         }
 
         // 重载用户
-        for (LlsPlayer llsPlayer: players.values()) {
+        for (LlsPlayer llsPlayer : players.values()) {
             llsPlayer.load();
             llsPlayer.save();
         }
@@ -277,7 +277,7 @@ public class LlsManager {
     }
 
     @NotNull
-    public synchronized LlsPlayer getLlsPlayer(String username) throws LlsManagerException {
+    public synchronized LlsPlayer getLlsPlayer(String username) throws PlayerNotFoundException, LoadPlayerFailException {
         LlsPlayer llsPlayer;
         Optional<Player> playerOptional = server.getPlayer(username);
         if (playerOptional.isPresent()) {
@@ -293,9 +293,9 @@ public class LlsManager {
             }
 
             if (!llsPlayer.hasUser()) {
-                throw new LlsManagerException(Component.translatable("lls-manager.text.player_not_found", NamedTextColor.RED).args(TextUtil.getUsernameComponent(username)));
+                throw new PlayerNotFoundException(Component.translatable("lls-manager.text.player_not_found", NamedTextColor.RED).args(TextUtil.getUsernameComponent(username)));
             } else if (!llsPlayer.load()) {
-                throw new LlsManagerException(Component.translatable("lls-manager.text.load_player_data_fail").args(TextUtil.getUsernameComponent(username)));
+                throw new LoadPlayerFailException(Component.translatable("lls-manager.text.load_player_data_fail").args(TextUtil.getUsernameComponent(username)));
             }
         }
         return llsPlayer;

@@ -12,14 +12,14 @@ public class DisconnectEventHandler implements EventHandler<DisconnectEvent> {
     private static LlsManager llsManager;
 
     public static void init(LlsManager llsManager) {
-        llsManager.server.getEventManager().register(llsManager, DisconnectEvent.class, PostOrder.LAST, new DisconnectEventHandler());
+        llsManager.server.getEventManager().register(llsManager, DisconnectEvent.class, new DisconnectEventHandler());
         DisconnectEventHandler.llsManager = llsManager;
     }
 
     @Override
     public void execute(DisconnectEvent event) {
         Player player = event.getPlayer();
-        LlsPlayer llsPlayer = llsManager.players.remove(player.getRemoteAddress());
+        LlsPlayer llsPlayer = llsManager.players.get(player.getRemoteAddress());
         String serverName = llsPlayer.getLastServerName();
         BridgeUtil.sendLeaveMessage(serverName, player);
     }

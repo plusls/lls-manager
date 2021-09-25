@@ -2,32 +2,31 @@ package com.plusls.llsmanager.whitelist;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.plusls.llsmanager.LlsManager;
 import com.plusls.llsmanager.command.Command;
 import com.plusls.llsmanager.data.LlsPlayer;
-import com.plusls.llsmanager.util.LlsManagerException;
+import com.plusls.llsmanager.util.LoadPlayerFailException;
+import com.plusls.llsmanager.util.PlayerNotFoundException;
 import com.plusls.llsmanager.util.TextUtil;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TranslatableComponent;
+import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Singleton
 public class LlsWhitelistCommand {
@@ -37,11 +36,12 @@ public class LlsWhitelistCommand {
 
     public BrigadierCommand createBrigadierCommand() {
         LiteralCommandNode<CommandSource> llsSeenNode = LiteralArgumentBuilder
-                .<CommandSource>literal("lls_seen").requires(commandSource -> commandSource.hasPermission("lls-manager.admin"))
+                .<CommandSource>literal("lls_whitelist").requires(commandSource -> commandSource.hasPermission("lls-manager.admin"))
                 .then(llsManager.injector.getInstance(AddCommand.class).createSubCommand())
                 .then(llsManager.injector.getInstance(RemoveCommand.class).createSubCommand())
-                .then(llsManager.injector.getInstance(ReloadCommand.class).createSubCommand())
-
+                .then(llsManager.injector.getInstance(ListCommand.class).createSubCommand())
+                .then(llsManager.injector.getInstance(StatusCommand.class).createSubCommand())
+                .then(llsManager.injector.getInstance(HelpCommand.class).createSubCommand())
                 .build();
         return new BrigadierCommand(llsSeenNode);
     }
@@ -74,10 +74,20 @@ public class LlsWhitelistCommand {
         }
 
         public CompletableFuture<Suggestions> getServerNameSuggestions(final CommandContext<CommandSource> context, final SuggestionsBuilder builder) {
+            String username = context.getArgument("username", String.class);
+            LlsPlayer llsPlayer;
+            try {
+                llsPlayer = llsManager.getLlsPlayer(username);
+            } catch (LoadPlayerFailException e) {
+                e.printStackTrace();
+                return builder.buildFuture();
+            } catch (PlayerNotFoundException e) {
+                return builder.buildFuture();
+            }
             llsManager.server.getAllServers().forEach(
                     registeredServer -> {
                         String serverName = registeredServer.getServerInfo().getName();
-                        if (serverName.contains(builder.getRemaining())) {
+                        if (serverName.contains(builder.getRemaining()) && !llsPlayer.getWhitelistServerList().contains(serverName)) {
                             builder.suggest(serverName);
                         }
                     }
@@ -86,14 +96,14 @@ public class LlsWhitelistCommand {
         }
 
         @Override
-        public int run(CommandContext<CommandSource> commandContext) throws CommandSyntaxException {
+        public int run(CommandContext<CommandSource> commandContext) {
             String username = commandContext.getArgument("username", String.class);
             String serverName = commandContext.getArgument("serverName", String.class);
             CommandSource source = commandContext.getSource();
             LlsPlayer llsPlayer;
             try {
                 llsPlayer = llsManager.getLlsPlayer(username);
-            } catch (LlsManagerException e) {
+            } catch (LoadPlayerFailException | PlayerNotFoundException e) {
                 source.sendMessage(Component.translatable("lls-manager.command.lls_whitelist.add.failure")
                         .color(NamedTextColor.RED)
                         .args(TextUtil.getServerNameComponent(serverName), TextUtil.getUsernameComponent(username)));
@@ -151,10 +161,20 @@ public class LlsWhitelistCommand {
         }
 
         public CompletableFuture<Suggestions> getServerNameSuggestions(final CommandContext<CommandSource> context, final SuggestionsBuilder builder) {
+            String username = context.getArgument("username", String.class);
+            LlsPlayer llsPlayer;
+            try {
+                llsPlayer = llsManager.getLlsPlayer(username);
+            } catch (LoadPlayerFailException e) {
+                e.printStackTrace();
+                return builder.buildFuture();
+            } catch (PlayerNotFoundException e) {
+                return builder.buildFuture();
+            }
             llsManager.server.getAllServers().forEach(
                     registeredServer -> {
                         String serverName = registeredServer.getServerInfo().getName();
-                        if (serverName.contains(builder.getRemaining())) {
+                        if (serverName.contains(builder.getRemaining()) && llsPlayer.getWhitelistServerList().contains(serverName)) {
                             builder.suggest(serverName);
                         }
                     }
@@ -163,14 +183,14 @@ public class LlsWhitelistCommand {
         }
 
         @Override
-        public int run(CommandContext<CommandSource> commandContext) throws CommandSyntaxException {
+        public int run(CommandContext<CommandSource> commandContext) {
             String username = commandContext.getArgument("username", String.class);
             String serverName = commandContext.getArgument("serverName", String.class);
             CommandSource source = commandContext.getSource();
             LlsPlayer llsPlayer;
             try {
                 llsPlayer = llsManager.getLlsPlayer(username);
-            } catch (LlsManagerException e) {
+            } catch (LoadPlayerFailException | PlayerNotFoundException e) {
                 source.sendMessage(Component.translatable("lls-manager.command.lls_whitelist.remove.failure")
                         .color(NamedTextColor.RED)
                         .args(TextUtil.getServerNameComponent(serverName), TextUtil.getUsernameComponent(username)));
@@ -200,8 +220,13 @@ public class LlsWhitelistCommand {
             }
         }
     }
+
     @Singleton
     private static class ListCommand implements Command {
+
+        @Inject
+        LlsManager llsManager;
+
         @Override
         public LiteralArgumentBuilder<CommandSource> createSubCommand() {
             return LiteralArgumentBuilder.<CommandSource>literal("list").executes(this);
@@ -209,90 +234,139 @@ public class LlsWhitelistCommand {
 
         @Override
         public int run(CommandContext<CommandSource> commandContext) {
-            List<String> whitelist = llsManager.whitelist.search("");
-            context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_whitelist.list.count_info")
-                    .args(Component.text(whitelist.size()).color(NamedTextColor.GREEN)));
-            AtomicInteger maxLen = new AtomicInteger(1);
-            whitelist.forEach(username -> maxLen.set(Math.max(username.length(), maxLen.get())));
+            CommandSource source = commandContext.getSource();
+            int maxLen = 0;
+            for (String username : llsManager.playerSet) {
+                maxLen = Math.max(maxLen, username.length());
+            }
+            for (String username : llsManager.playerSet) {
+                LlsPlayer llsPlayer;
+                try {
+                    llsPlayer = llsManager.getLlsPlayer(username);
+                } catch (LoadPlayerFailException | PlayerNotFoundException e) {
+                    e.printStackTrace();
+                    source.sendMessage(e.message);
+                    return 0;
+                }
 
-            whitelist.forEach(username -> {
-                HoverEvent<Component> hoverEvent = HoverEvent.showText(Component.translatable("lls-manager.command.lls_whitelist.list.hover_event_info")
-                        .args(TextUtil.getUsernameComponent(username)));
-
-                ClickEvent clickEvent = ClickEvent.suggestCommand("/lls_whitelist remove " + username);
-
-                context.getSource().sendMessage(Component.text(" - ")
+                TextComponent.Builder component = Component.text();
+                component.content(" - ")
                         .append(TextUtil.getUsernameComponent(username))
-                        .append(Component.text(" " + String.join("", Collections.nCopies(maxLen.get() + 1 - username.length(), "-")) + " "))
-                        .append(Component.text("[X]").color(NamedTextColor.GRAY)
-                                .hoverEvent(hoverEvent)
-                                .clickEvent(clickEvent)));
-            });
-            return 1;        }
+                        .append(Component.text(" " + String.join("", Collections.nCopies(maxLen - username.length(), " "))))
+                        .append(Component.text(" :["));
+                boolean first = true;
+                for (String serverName : llsPlayer.getWhitelistServerList()) {
+                    HoverEvent<Component> hoverEvent = HoverEvent.showText(Component.translatable("lls-manager.command.lls_whitelist.list.hover_event_info")
+                            .args(TextUtil.getServerNameComponent(username)));
+                    ClickEvent clickEvent = ClickEvent.suggestCommand(String.format("/lls_whitelist remove %s %s", username, serverName));
+                    if (!first) {
+                        component.append(Component.text(", "));
+                    }
+                    first = false;
+                    component.append(TextUtil.getServerNameComponent(serverName))
+                            .append(Component.text("[X]").color(NamedTextColor.GRAY)
+                                    .hoverEvent(hoverEvent)
+                                    .clickEvent(clickEvent));
+                }
+                component.append(Component.text("]"));
+                source.sendMessage(component.build());
+            }
+            return 1;
+        }
     }
 
-    public static void register(LlsManager llsManager) {
-        llsManager.commandManager.register(createBrigadierCommand(llsManager));
+    @Singleton
+    private static class StatusCommand implements Command {
+
+        @Inject
+        LlsManager llsManager;
+
+        @Override
+        public LiteralArgumentBuilder<CommandSource> createSubCommand() {
+            return LiteralArgumentBuilder.<CommandSource>literal("status")
+                    .then(RequiredArgumentBuilder.<CommandSource, Boolean>argument("status", BoolArgumentType.bool())
+                            //.suggests(this)
+                            .executes(this::statusExecute))
+                    .executes(this);
+        }
+
+        @Override
+        public CompletableFuture<Suggestions> getSuggestions(final CommandContext<CommandSource> context, final SuggestionsBuilder builder) {
+            if ("true".contains(builder.getRemaining())) {
+                builder.suggest("true");
+            } else if ("false".contains(builder.getRemaining())) {
+                builder.suggest("false");
+            }
+            return builder.buildFuture();
+        }
+
+        public int statusExecute(CommandContext<CommandSource> commandContext) {
+            Boolean status = commandContext.getArgument("status", Boolean.class);
+            CommandSource source = commandContext.getSource();
+            if (status) {
+                if (llsManager.config.getWhitelist()) {
+                    source.sendMessage(Component.translatable("lls-manager.command.lls_whitelist.set.already")
+                            .color(NamedTextColor.RED)
+                            .args(Component.translatable("lls-manager.command.lls_whitelist.on")));
+                    return 0;
+                } else if (llsManager.config.setWhitelist(true)) {
+                    source.sendMessage(Component.translatable("lls-manager.command.lls_whitelist.set.success")
+                            .args(Component.translatable("lls-manager.command.lls_whitelist.on").color(NamedTextColor.GREEN)));
+                    return 1;
+                } else {
+                    source.sendMessage(Component.translatable("lls-manager.command.lls_whitelist.set.failure")
+                            .color(NamedTextColor.RED)
+                            .args(Component.translatable("lls-manager.command.lls_whitelist.on")));
+                    return 0;
+                }
+            } else {
+                if (!llsManager.config.getWhitelist()) {
+                    source.sendMessage(Component.translatable("lls-manager.command.lls_whitelist.set.already")
+                            .color(NamedTextColor.RED)
+                            .args(Component.translatable("lls-manager.command.lls_whitelist.off")));
+                    return 0;
+                } else if (llsManager.config.setWhitelist(false)) {
+                    source.sendMessage(Component.translatable("lls-manager.command.lls_whitelist.set.success")
+                            .args(Component.translatable("lls-manager.command.lls_whitelist.off").color(NamedTextColor.RED)));
+                    return 1;
+                } else {
+                    source.sendMessage(Component.translatable("lls-manager.command.lls_whitelist.set.failure")
+                            .color(NamedTextColor.RED)
+                            .args(Component.translatable("lls-manager.command.lls_whitelist.off")));
+                    return 0;
+                }
+            }
+        }
+
+        @Override
+        public int run(CommandContext<CommandSource> commandContext) {
+            Component statusTextComponent;
+            if (llsManager.config.getWhitelist()) {
+                statusTextComponent = Component.translatable("lls-manager.command.lls_whitelist.on").color(NamedTextColor.GREEN);
+            } else {
+                statusTextComponent = Component.translatable("lls-manager.command.lls_whitelist.off").color(NamedTextColor.RED);
+            }
+            commandContext.getSource().sendMessage(Component.translatable("lls-manager.command.lls_whitelist.status.info")
+                    .args(statusTextComponent));
+            return 1;
+        }
     }
 
-    private static BrigadierCommand createBrigadierCommand(LlsManager llsManager) {
-        LiteralCommandNode<CommandSource> llsWhitelistNode = LiteralArgumentBuilder
-                .<CommandSource>literal("lls_whitelist").requires(commandSource -> commandSource.hasPermission("lls-manager.admin"))
-                .then(
-                ).then(
-                ).then(
-                ).then(
-                ).then(LiteralArgumentBuilder.<CommandSource>literal("on").executes(
-                        context -> {
-                            if (llsManager.config.getWhitelist()) {
-                                context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_whitelist.set.already")
-                                        .color(NamedTextColor.RED)
-                                        .args(Component.translatable("lls-manager.command.lls_whitelist.on")));
-                                return 0;
-                            } else if (llsManager.config.setWhitelist(true)) {
-                                context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_whitelist.set.success")
-                                        .args(Component.translatable("lls-manager.command.lls_whitelist.on").color(NamedTextColor.GREEN)));
-                                return 1;
-                            } else {
-                                context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_whitelist.set.failure")
-                                        .color(NamedTextColor.RED)
-                                        .args(Component.translatable("lls-manager.command.lls_whitelist.on")));
-                                return 0;
-                            }
-                        })
-                ).then(LiteralArgumentBuilder.<CommandSource>literal("off").executes(
-                        context -> {
-                            if (!llsManager.config.getWhitelist()) {
-                                context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_whitelist.set.already")
-                                        .color(NamedTextColor.RED)
-                                        .args(Component.translatable("lls-manager.command.lls_whitelist.off")));
-                                return 0;
-                            } else if (llsManager.config.setWhitelist(false)) {
-                                context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_whitelist.set.success")
-                                        .args(Component.translatable("lls-manager.command.lls_whitelist.off").color(NamedTextColor.RED)));
-                                return 1;
-                            } else {
-                                context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_whitelist.set.failure")
-                                        .color(NamedTextColor.RED)
-                                        .args(Component.translatable("lls-manager.command.lls_whitelist.off")));
-                                return 0;
-                            }
-                        })
-                ).then(LiteralArgumentBuilder.<CommandSource>literal("status").executes(
-                        context -> {
-                            List<String> whitelist = llsManager.whitelist.search("");
-                            TranslatableComponent statusTextComponent;
-                            if (llsManager.config.getWhitelist()) {
-                                statusTextComponent = Component.translatable("lls-manager.command.lls_whitelist.on").color(NamedTextColor.GREEN);
-                            } else {
-                                statusTextComponent = Component.translatable("lls-manager.command.lls_whitelist.off").color(NamedTextColor.RED);
-                            }
-                            context.getSource().sendMessage(Component.translatable("lls-manager.command.lls_whitelist.status.info")
-                                    .args(Component.text(whitelist.size()).color(NamedTextColor.GREEN), statusTextComponent));
-                            return 1;
-                        })
-                ).build();
+    @Singleton
+    private static class HelpCommand implements Command {
 
-        return new BrigadierCommand(llsWhitelistNode);
+        @Override
+        public LiteralArgumentBuilder<CommandSource> createSubCommand() {
+            return LiteralArgumentBuilder.<CommandSource>literal("help").executes(this);
+        }
+
+        @Override
+        public int run(CommandContext<CommandSource> commandContext) {
+            CommandSource source = commandContext.getSource();
+            for (int i = 0; i < 6; ++i) {
+                source.sendMessage(Component.translatable(String.format("lls-manager.command.lls_whitelist.hint%d", i)));
+            }
+            return 1;
+        }
     }
 }

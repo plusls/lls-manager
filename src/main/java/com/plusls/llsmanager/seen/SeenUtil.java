@@ -2,7 +2,8 @@ package com.plusls.llsmanager.seen;
 
 import com.plusls.llsmanager.LlsManager;
 import com.plusls.llsmanager.data.LlsPlayer;
-import com.plusls.llsmanager.util.LlsManagerException;
+import com.plusls.llsmanager.util.LoadPlayerFailException;
+import com.plusls.llsmanager.util.PlayerNotFoundException;
 import com.plusls.llsmanager.util.TextUtil;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ServerConnection;
@@ -80,11 +81,11 @@ public class SeenUtil {
     }
 
 
-    public static SeenData getSeenData(LlsManager llsManager, String username) throws LlsManagerException {
+    public static SeenData getSeenData(LlsManager llsManager, String username) throws LoadPlayerFailException, PlayerNotFoundException {
         return getSeenData(llsManager, llsManager.getLlsPlayer(username));
     }
 
-    public static List<SeenData> getAllSeenData(LlsManager llsManager) throws LlsManagerException {
+    public static List<SeenData> getAllSeenData(LlsManager llsManager) throws LoadPlayerFailException, PlayerNotFoundException {
         List<SeenData> ret = new ArrayList<>();
         for (String username : llsManager.playerSet) {
             ret.add(getSeenData(llsManager, username));
