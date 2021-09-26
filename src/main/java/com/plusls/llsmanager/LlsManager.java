@@ -18,6 +18,7 @@ import com.plusls.llsmanager.handler.ServerConnectedEventHandler;
 import com.plusls.llsmanager.minimapWorldSync.MinimapWorldSyncHandler;
 import com.plusls.llsmanager.offlineAuth.OfflineAuthHandler;
 import com.plusls.llsmanager.seen.SeenHandler;
+import com.plusls.llsmanager.serverGroup.LlsServerGroupCommand;
 import com.plusls.llsmanager.tabListSync.TabListSyncHandler;
 import com.plusls.llsmanager.util.LoadPlayerFailException;
 import com.plusls.llsmanager.util.PlayerNotFoundException;
@@ -131,6 +132,7 @@ public class LlsManager {
         MinimapWorldSyncHandler.init(this);
         WhitelistHandler.init(this);
         OfflineAuthHandler.init(this);
+        commandManager.register(injector.getInstance(LlsServerGroupCommand.class).createBrigadierCommand());
 
         PlayerChooseInitialServerEventHandler.init(this);
         ServerConnectedEventHandler.init(this);
@@ -308,11 +310,11 @@ public class LlsManager {
     }
 
     public void autoRemovePlayers() {
-        players.forEach((key, value) -> {
-            if (server.getPlayer(value.username).isEmpty()) {
-                logger.warn("remove {}", value.username);
-            }
-        });
+//        players.forEach((key, value) -> {
+//            if (server.getPlayer(value.username).isEmpty()) {
+//                logger.warn("remove {}", value.username);
+//            }
+//        });
 
         players.entrySet().removeIf(entry -> server.getPlayer(entry.getValue().username).isEmpty());
     }

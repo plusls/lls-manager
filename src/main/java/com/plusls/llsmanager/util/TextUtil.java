@@ -32,7 +32,7 @@ public class TextUtil {
         HoverEvent<Component> hoverEvent = HoverEvent.showText(Component.translatable("lls-manager.text.server_group.hover_event")
                 .args(getServerGroupNameComponentWithoutEvent(serverGroupName)));
         return getServerGroupNameComponentWithoutEvent(serverGroupName).hoverEvent(hoverEvent)
-                .clickEvent(ClickEvent.suggestCommand("/lls_server_group query " + serverGroupName));
+                .clickEvent(ClickEvent.runCommand("/lls_server_group query " + serverGroupName));
     }
 
     public static Component getServerGroupNameComponentWithoutEvent(String serverName) {

@@ -98,7 +98,9 @@ public class LlsSeenCommand {
                 page = page + pageCount;
             }
             if (page > pageCount || page <= 0) {
-                commandSource.sendMessage(Component.translatable("lls-manager.command.lls_seen.list.page_not_found", NamedTextColor.RED).args(Component.text(page)));
+                commandSource.sendMessage(Component.translatable("lls-manager.command.lls_seen.list.page_not_found",
+                        NamedTextColor.RED,
+                        Component.text(page)));
                 return 0;
             }
             int startIdx = (page - 1) * 10;
@@ -158,11 +160,30 @@ public class LlsSeenCommand {
         }
     }
 
+    @Singleton
+    private static class HelpCommand implements Command {
+
+        @Override
+        public LiteralArgumentBuilder<CommandSource> createSubCommand() {
+            return LiteralArgumentBuilder.<CommandSource>literal("help").executes(this);
+        }
+
+        @Override
+        public int run(CommandContext<CommandSource> commandContext) {
+            CommandSource source = commandContext.getSource();
+            for (int i = 0; i < 3; ++i) {
+                source.sendMessage(Component.translatable(String.format("lls-manager.command.lls_seen.hint%d", i)));
+            }
+            return 1;
+        }
+    }
+
     public BrigadierCommand createBrigadierCommand() {
         LiteralCommandNode<CommandSource> llsSeenNode = LiteralArgumentBuilder
                 .<CommandSource>literal("lls_seen")
-                .then(llsManager.injector.getInstance(QueryCommand.class).createSubCommand())
+                .then(llsManager.injector.getInstance(HelpCommand.class).createSubCommand())
                 .then(llsManager.injector.getInstance(ListCommand.class).createSubCommand())
+                .then(llsManager.injector.getInstance(QueryCommand.class).createSubCommand())
                 .build();
         return new BrigadierCommand(llsSeenNode);
     }
