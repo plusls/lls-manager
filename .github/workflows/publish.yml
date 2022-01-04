@@ -7,7 +7,7 @@ jobs:
   build:
     strategy:
       matrix:
-        java: [ 16 ]
+        java: [ 17 ]
         os: [ ubuntu-20.04 ]
     runs-on: ${{ matrix.os }}
     steps:
@@ -26,7 +26,7 @@ jobs:
         run: ./gradlew build
       - name: Upload assets to GitHub
         uses: AButler/upload-release-assets@v2.0
-        if: ${{ runner.os == 'Linux' && matrix.java == '16' }}
+        if: ${{ runner.os == 'Linux' && matrix.java == '17' }}
         with:
           files: 'build/libs/*-all.jar;LICENSE'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
