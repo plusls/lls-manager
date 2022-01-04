@@ -93,7 +93,7 @@ public class LlsManager {
     private static LlsManager instance;
 
     // 连接过的玩家
-    private final Map<InetSocketAddress, LlsPlayer> players = new ConcurrentHashMap<>();
+    private final Map<InetSocketAddress, LoginData> players = new ConcurrentHashMap<>();
 
     // 玩家缓存，不包含在线玩家
     public static final int PLAYER_CACHE_SIZE = 10;
@@ -193,10 +193,11 @@ public class LlsManager {
             throw new IllegalStateException(e);
         }
 
-        // 重载用户
-        for (LlsPlayer llsPlayer : players.values()) {
-            llsPlayer.load();
-            llsPlayer.save();
+        autoRemovePlayers();
+            // 重载用户
+        for (LoginData loginData : players.values()) {
+            loginData.llsPlayer.load();
+            loginData.llsPlayer.save();
         }
     }
 
@@ -281,7 +282,7 @@ public class LlsManager {
 
     @NotNull
     public LlsPlayer getLlsPlayer(InboundConnection connection) {
-        return Objects.requireNonNull(players.get(connection.getRemoteAddress()));
+        return Objects.requireNonNull(players.get(connection.getRemoteAddress())).llsPlayer;
     }
 
     @NotNull
@@ -289,7 +290,7 @@ public class LlsManager {
         LlsPlayer llsPlayer;
         Optional<Player> playerOptional = server.getPlayer(username);
         if (playerOptional.isPresent()) {
-            llsPlayer = Objects.requireNonNull(players.get(playerOptional.get().getRemoteAddress()));
+            llsPlayer = Objects.requireNonNull(players.get(playerOptional.get().getRemoteAddress())).llsPlayer;
         } else {
             llsPlayer = playersCache.get(username);
             if (llsPlayer == null) {
@@ -316,11 +317,20 @@ public class LlsManager {
 //            }
 //        });
 
-        players.entrySet().removeIf(entry -> server.getPlayer(entry.getValue().username).isEmpty());
+        long currentTime = System.currentTimeMillis();
+        players.entrySet().removeIf(entry -> server.getPlayer(entry.getValue().llsPlayer.username).isEmpty() && currentTime - entry.getValue().lastLoginTime > 1000*20);
     }
 
     public void addLlsPlayer(InboundConnection connection, LlsPlayer llsPlayer) {
-        players.put(connection.getRemoteAddress(), llsPlayer);
+        players.put(connection.getRemoteAddress(), new LoginData(llsPlayer));
+    }
+    private static class LoginData {
+        public LlsPlayer llsPlayer;
+        public long lastLoginTime;
+        public LoginData(LlsPlayer llsPlayer) {
+            this.llsPlayer = llsPlayer;
+            this.lastLoginTime = System.currentTimeMillis();
+        }
     }
 
 }
