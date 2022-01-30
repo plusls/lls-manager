@@ -13,6 +13,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.plusls.llsmanager.LlsManager;
 import com.plusls.llsmanager.command.Command;
 import com.plusls.llsmanager.data.LlsPlayer;
+import com.plusls.llsmanager.util.CommandUtil;
 import com.plusls.llsmanager.util.LoadPlayerFailException;
 import com.plusls.llsmanager.util.PlayerNotFoundException;
 import com.plusls.llsmanager.util.TextUtil;
@@ -107,12 +108,21 @@ public class LlsWhitelistCommand {
             LlsPlayer llsPlayer;
             try {
                 llsPlayer = llsManager.getLlsPlayer(username);
-            } catch (LoadPlayerFailException | PlayerNotFoundException e) {
+            }
+            catch (LoadPlayerFailException e) {
                 source.sendMessage(Component.translatable("lls-manager.command.lls_whitelist.add.failure")
                         .color(NamedTextColor.RED)
                         .args(TextUtil.getServerAutoComponent(serverName), TextUtil.getUsernameComponent(username)));
                 source.sendMessage(e.message);
                 return 0;
+            } catch (PlayerNotFoundException e) {
+                llsPlayer = new LlsPlayer(username, llsManager.dataFolderPath);
+                if (llsPlayer.save()) {
+                    llsManager.playerSet.add(username);
+                    source.sendMessage(Component.translatable("lls-manager.command.lls_create_player.success").args(TextUtil.getUsernameComponent(username)));
+                } else {
+                    CommandUtil.saveDataFail("allData", username, source);
+                }
             }
             ConcurrentSkipListSet<String> whitelistServerList = llsPlayer.getWhitelistServerList();
             if (whitelistServerList.contains(serverName)) {
