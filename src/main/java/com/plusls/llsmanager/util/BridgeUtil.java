@@ -56,14 +56,14 @@ public class BridgeUtil {
                         playerToSend.equals(player));
     }
 
-    @FunctionalInterface
-    public interface Exclude {
-        boolean test(Player playerToSend, RegisteredServer serverToSend);
-    }
-
-
     public static void bridgeMessage(String message, String messageSource, String channel) {
         // TODO
         // 发送信息给外界信息中转，比如 qq
+    }
+
+
+    @FunctionalInterface
+    public interface Exclude {
+        boolean test(Player playerToSend, RegisteredServer serverToSend);
     }
 }

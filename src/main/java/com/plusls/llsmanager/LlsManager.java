@@ -69,41 +69,31 @@ import java.util.concurrent.ConcurrentSkipListSet;
 @Singleton
 public class LlsManager {
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-
+    // 玩家缓存，不包含在线玩家
+    public static final int PLAYER_CACHE_SIZE = 10;
+    @Nullable
+    private static LlsManager instance;
+    public final Map<String, LlsPlayer> playersCache = new ConcurrentHashMap<>();
+    // 连接过的玩家
+    private final Map<InetSocketAddress, LoginData> players = new ConcurrentHashMap<>();
     @Inject
     public Logger logger;
-
     @Inject
     public ProxyServer server;
-
     @Inject
     public CommandManager commandManager;
-
     @Inject
     public EventManager eventManager;
-
     @Inject
     @DataDirectory
     public Path dataFolderPath;
-
     @Inject
     public Injector injector;
-
-    @Nullable
-    private static LlsManager instance;
-
-    // 连接过的玩家
-    private final Map<InetSocketAddress, LoginData> players = new ConcurrentHashMap<>();
-
-    // 玩家缓存，不包含在线玩家
-    public static final int PLAYER_CACHE_SIZE = 10;
-    public final Map<String, LlsPlayer> playersCache = new ConcurrentHashMap<>();
-
-
     public Config config;
 
     // 所有玩家，包含不在线的玩家
     public ConcurrentSkipListSet<String> playerSet = new ConcurrentSkipListSet<>();
+    public boolean hasFloodgate = false;
 
     @NotNull
     public static LlsManager getInstance() {
@@ -114,11 +104,51 @@ public class LlsManager {
         return getInstance().logger;
     }
 
-    public boolean hasFloodgate = false;
+    private static Path getL10nPath() {
+        Path l10nPath;
+        URL knownResource = LlsManager.class.getClassLoader().getResource("l10n/messages.properties");
+
+        if (knownResource == null) {
+            throw new IllegalStateException("messages.properties does not exist, don't know where we are");
+        }
+        if (knownResource.getProtocol().equals("jar")) {
+            // Running from a JAR
+            // 如果在 jar 中路径类似 my.jar!/Main.class
+            String jarPathRaw = knownResource.toString().split("!")[0];
+            URI path = URI.create(jarPathRaw + "!/");
+
+            FileSystem fileSystem;
+            try {
+                fileSystem = FileSystems.newFileSystem(path, Map.of("create", "true"));
+            } catch (IOException e) {
+                e.printStackTrace();
+                throw new IllegalStateException(e);
+            }
+            l10nPath = fileSystem.getPath("l10n");
+            if (!Files.exists(l10nPath)) {
+                throw new IllegalStateException("l10n does not exist, don't know where we are");
+            }
+        } else {
+            // Running from the file system
+            URI uri;
+            try {
+                URL url = LlsManager.class.getClassLoader().getResource("l10n");
+                if (url == null) {
+                    throw new IllegalStateException("l10n does not exist, don't know where we are");
+                }
+                uri = url.toURI();
+            } catch (URISyntaxException e) {
+                e.printStackTrace();
+                throw new IllegalStateException(e);
+            }
+            l10nPath = Paths.get(uri);
+        }
+        return l10nPath;
+    }
 
     @Inject(optional = true)
-    public void initFloodgate(@Named("floodgate") PluginContainer luckPermsContainer) {
-        this.hasFloodgate = luckPermsContainer != null;
+    public void initFloodgate(@Named("floodgate") PluginContainer floodgateContainer) {
+        this.hasFloodgate = floodgateContainer != null;
     }
 
     @Subscribe
@@ -194,53 +224,11 @@ public class LlsManager {
         }
 
         autoRemovePlayers();
-            // 重载用户
+        // 重载用户
         for (LoginData loginData : players.values()) {
             loginData.llsPlayer.load();
             loginData.llsPlayer.save();
         }
-    }
-
-    private static Path getL10nPath() {
-        Path l10nPath;
-        URL knownResource = LlsManager.class.getClassLoader().getResource("l10n/messages.properties");
-
-        if (knownResource == null) {
-            throw new IllegalStateException("messages.properties does not exist, don't know where we are");
-        }
-        if (knownResource.getProtocol().equals("jar")) {
-            // Running from a JAR
-            // 如果在 jar 中路径类似 my.jar!/Main.class
-            String jarPathRaw = knownResource.toString().split("!")[0];
-            URI path = URI.create(jarPathRaw + "!/");
-
-            FileSystem fileSystem;
-            try {
-                fileSystem = FileSystems.newFileSystem(path, Map.of("create", "true"));
-            } catch (IOException e) {
-                e.printStackTrace();
-                throw new IllegalStateException(e);
-            }
-            l10nPath = fileSystem.getPath("l10n");
-            if (!Files.exists(l10nPath)) {
-                throw new IllegalStateException("l10n does not exist, don't know where we are");
-            }
-        } else {
-            // Running from the file system
-            URI uri;
-            try {
-                URL url = LlsManager.class.getClassLoader().getResource("l10n");
-                if (url == null) {
-                    throw new IllegalStateException("l10n does not exist, don't know where we are");
-                }
-                uri = url.toURI();
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
-                throw new IllegalStateException(e);
-            }
-            l10nPath = Paths.get(uri);
-        }
-        return l10nPath;
     }
 
     // from velocity FileSystemUtils, VelocityServer
@@ -311,22 +299,18 @@ public class LlsManager {
     }
 
     public void autoRemovePlayers() {
-//        players.forEach((key, value) -> {
-//            if (server.getPlayer(value.username).isEmpty()) {
-//                logger.warn("remove {}", value.username);
-//            }
-//        });
-
         long currentTime = System.currentTimeMillis();
-        players.entrySet().removeIf(entry -> server.getPlayer(entry.getValue().llsPlayer.username).isEmpty() && currentTime - entry.getValue().lastLoginTime > 1000*20);
+        players.entrySet().removeIf(entry -> server.getPlayer(entry.getValue().llsPlayer.username).isEmpty() && currentTime - entry.getValue().lastLoginTime > 1000 * 20);
     }
 
     public void addLlsPlayer(InboundConnection connection, LlsPlayer llsPlayer) {
         players.put(connection.getRemoteAddress(), new LoginData(llsPlayer));
     }
+
     private static class LoginData {
         public LlsPlayer llsPlayer;
         public long lastLoginTime;
+
         public LoginData(LlsPlayer llsPlayer) {
             this.llsPlayer = llsPlayer;
             this.lastLoginTime = System.currentTimeMillis();

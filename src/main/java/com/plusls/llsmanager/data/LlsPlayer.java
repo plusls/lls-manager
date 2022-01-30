@@ -13,40 +13,21 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 public class LlsPlayer extends AbstractConfig<LlsPlayer.LlsPlayerData> {
 
-    private static final LlsManager llsManager = Objects.requireNonNull(LlsManager.getInstance());
-
-    // TODO last login time
-    private LlsPlayerData data = new LlsPlayerData();
-    public Status status;
-    public String username;
     public static final String SERVER = "server";
     public static final String SUB_SERVER = "sub_server";
     public static final String GLOBAL = "global";
-
+    private static final LlsManager llsManager = Objects.requireNonNull(LlsManager.getInstance());
     // 自动补全用
     public static List<String> channelList = Arrays.asList(SERVER, SUB_SERVER, GLOBAL);
-
-    public enum Status {
-        LOGGED_IN,
-        NEED_LOGIN,
-        NEED_REGISTER,
-        OFFLINE
-    }
+    public Status status;
+    public String username;
+    // TODO last login time
+    private LlsPlayerData data = new LlsPlayerData();
 
     public LlsPlayer(String username, Path dataFolderPath) {
         super(dataFolderPath.resolve("player").resolve(username + ".json"), LlsPlayerData.class);
         status = Status.OFFLINE;
         this.username = username;
-    }
-
-
-    public static class LlsPlayerData {
-        private boolean onlineMode = llsManager.config.getDefaultOnlineMode();
-        private String password = "";
-        private String lastServerName = "";
-        private String channel = llsManager.config.getDefaultChannel();
-        private Date lastSeenTime = new Date();
-        private final ConcurrentSkipListSet<String> whitelistServerList = new ConcurrentSkipListSet<>();
     }
 
     public boolean hasUser() {
@@ -125,5 +106,21 @@ public class LlsPlayer extends AbstractConfig<LlsPlayer.LlsPlayerData> {
             }
         }
         return ret;
+    }
+
+    public enum Status {
+        LOGGED_IN,
+        NEED_LOGIN,
+        NEED_REGISTER,
+        OFFLINE
+    }
+
+    public static class LlsPlayerData {
+        private final ConcurrentSkipListSet<String> whitelistServerList = new ConcurrentSkipListSet<>();
+        private boolean onlineMode = llsManager.config.getDefaultOnlineMode();
+        private String password = "";
+        private String lastServerName = "";
+        private String channel = llsManager.config.getDefaultChannel();
+        private Date lastSeenTime = new Date();
     }
 }

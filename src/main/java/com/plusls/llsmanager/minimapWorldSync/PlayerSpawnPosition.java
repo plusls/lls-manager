@@ -17,8 +17,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.zip.CRC32;
 
 public class PlayerSpawnPosition implements MinecraftPacket {
-    private ByteBuf data;
     private static final Field serverConnField = ReflectUtil.getField(BackendPlaySessionHandler.class, "serverConn");
+    private ByteBuf data;
 
     @Override
     public void decode(ByteBuf byteBuf, ProtocolUtils.Direction direction, ProtocolVersion protocolVersion) {

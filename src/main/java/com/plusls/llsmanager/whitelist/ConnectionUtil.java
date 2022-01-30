@@ -2,7 +2,6 @@ package com.plusls.llsmanager.whitelist;
 
 import com.plusls.llsmanager.LlsManager;
 import com.velocitypowered.api.proxy.InboundConnection;
-import com.velocitypowered.proxy.connection.client.LoginInboundConnection;
 import io.netty.channel.Channel;
 import io.netty.util.AttributeKey;
 import org.geysermc.floodgate.api.player.FloodgatePlayer;

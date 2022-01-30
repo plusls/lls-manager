@@ -16,12 +16,10 @@ import java.util.concurrent.ConcurrentHashMap;
 @Singleton
 public class TabListSyncHandler {
 
-    @Inject
-    public LlsManager llsManager;
-
     // 不用 UUID 为 key 是考虑到有的服务器的子服和 velocity uuid 会有不一致的情况
     public final Map<String, PlayerListItem.Item> currentItems = new ConcurrentHashMap<>();
-
+    @Inject
+    public LlsManager llsManager;
 
     public static void init(LlsManager llsManager) {
         StateRegistry.PacketRegistry toReplace = StateRegistry.PLAY.clientbound;

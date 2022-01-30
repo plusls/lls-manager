@@ -9,7 +9,6 @@ import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.proxy.Player;
 
 import java.util.Date;
-import java.util.Objects;
 
 @Singleton
 public class SeenHandler {

@@ -30,6 +30,16 @@ public class LlsSeenCommand {
     @Inject
     LlsManager llsManager;
 
+    public BrigadierCommand createBrigadierCommand() {
+        LiteralCommandNode<CommandSource> llsSeenNode = LiteralArgumentBuilder
+                .<CommandSource>literal("lls_seen")
+                .then(llsManager.injector.getInstance(HelpCommand.class).createSubCommand())
+                .then(llsManager.injector.getInstance(ListCommand.class).createSubCommand())
+                .then(llsManager.injector.getInstance(QueryCommand.class).createSubCommand())
+                .build();
+        return new BrigadierCommand(llsSeenNode);
+    }
+
     @Singleton
     private static class QueryCommand implements Command {
         @Inject
@@ -176,16 +186,6 @@ public class LlsSeenCommand {
             }
             return 1;
         }
-    }
-
-    public BrigadierCommand createBrigadierCommand() {
-        LiteralCommandNode<CommandSource> llsSeenNode = LiteralArgumentBuilder
-                .<CommandSource>literal("lls_seen")
-                .then(llsManager.injector.getInstance(HelpCommand.class).createSubCommand())
-                .then(llsManager.injector.getInstance(ListCommand.class).createSubCommand())
-                .then(llsManager.injector.getInstance(QueryCommand.class).createSubCommand())
-                .build();
-        return new BrigadierCommand(llsSeenNode);
     }
 }
 

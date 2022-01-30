@@ -23,49 +23,6 @@ public class Config extends AbstractConfig<Config.ConfigData> {
         config = data;
     }
 
-    public static class ConfigData {
-        // 是否在 TabList 显示子服玩家
-        private boolean showAllPlayerInTabList = false;
-        // 是否同步聊天信息
-        private boolean bridgeChatMessage = false;
-        // 是否同步玩家加入信息
-        private boolean bridgePlayerJoinMessage = false;
-        // 是否同步玩家离开信息
-        private boolean bridgePlayerLeaveMessage = false;
-        // 白名单
-        private boolean whitelist = false;
-        // 默认为在线模式
-        private boolean defaultOnlineMode = true;
-        // 默认聊天频道
-        private String defaultChannel = LlsPlayer.SERVER;
-        // 离线认证服务器名字
-        private String authServerName = "lls-auth";
-        // 接受聊天信息的 channel
-        private final ConcurrentLinkedQueue<String> chatMessageChannelList = new ConcurrentLinkedQueue<>();
-        // 服务器内部互相传递信息的 channel
-        private final ConcurrentLinkedQueue<String> bridgeMessageChannelList = new ConcurrentLinkedQueue<>();
-        // 接受离开信息的 channel
-        private final ConcurrentLinkedQueue<String> leaveMessageChannelList = new ConcurrentLinkedQueue<>();
-        // 接受加入游戏信息的 channel
-        private final ConcurrentLinkedQueue<String> joinMessageChannelList = new ConcurrentLinkedQueue<>();
-        // 启用小地图同步
-        private boolean minimapWorldSync = false;
-        // 服务器组
-        private final ConcurrentHashMap<String, ConcurrentSkipListSet<String>> serverGroup = new ConcurrentHashMap<>();
-
-
-        public ConfigData() {
-            chatMessageChannelList.add(LlsPlayer.SERVER);
-            chatMessageChannelList.add(LlsPlayer.GLOBAL);
-            bridgeMessageChannelList.add(LlsPlayer.SERVER);
-            bridgeMessageChannelList.add(LlsPlayer.GLOBAL);
-            leaveMessageChannelList.add(LlsPlayer.SERVER);
-            leaveMessageChannelList.add(LlsPlayer.GLOBAL);
-            joinMessageChannelList.add(LlsPlayer.SERVER);
-            joinMessageChannelList.add(LlsPlayer.GLOBAL);
-        }
-    }
-
     public ConcurrentHashMap<String, ConcurrentSkipListSet<String>> getServerGroup() {
         return config.serverGroup;
     }
@@ -181,5 +138,48 @@ public class Config extends AbstractConfig<Config.ConfigData> {
     public boolean setWhitelist(boolean status) {
         config.whitelist = status;
         return save();
+    }
+
+    public static class ConfigData {
+        // 接受聊天信息的 channel
+        private final ConcurrentLinkedQueue<String> chatMessageChannelList = new ConcurrentLinkedQueue<>();
+        // 服务器内部互相传递信息的 channel
+        private final ConcurrentLinkedQueue<String> bridgeMessageChannelList = new ConcurrentLinkedQueue<>();
+        // 接受离开信息的 channel
+        private final ConcurrentLinkedQueue<String> leaveMessageChannelList = new ConcurrentLinkedQueue<>();
+        // 接受加入游戏信息的 channel
+        private final ConcurrentLinkedQueue<String> joinMessageChannelList = new ConcurrentLinkedQueue<>();
+        // 服务器组
+        private final ConcurrentHashMap<String, ConcurrentSkipListSet<String>> serverGroup = new ConcurrentHashMap<>();
+        // 是否在 TabList 显示子服玩家
+        private boolean showAllPlayerInTabList = false;
+        // 是否同步聊天信息
+        private boolean bridgeChatMessage = false;
+        // 是否同步玩家加入信息
+        private boolean bridgePlayerJoinMessage = false;
+        // 是否同步玩家离开信息
+        private boolean bridgePlayerLeaveMessage = false;
+        // 白名单
+        private boolean whitelist = false;
+        // 默认为在线模式
+        private boolean defaultOnlineMode = true;
+        // 默认聊天频道
+        private String defaultChannel = LlsPlayer.SERVER;
+        // 离线认证服务器名字
+        private String authServerName = "lls-auth";
+        // 启用小地图同步
+        private boolean minimapWorldSync = false;
+
+
+        public ConfigData() {
+            chatMessageChannelList.add(LlsPlayer.SERVER);
+            chatMessageChannelList.add(LlsPlayer.GLOBAL);
+            bridgeMessageChannelList.add(LlsPlayer.SERVER);
+            bridgeMessageChannelList.add(LlsPlayer.GLOBAL);
+            leaveMessageChannelList.add(LlsPlayer.SERVER);
+            leaveMessageChannelList.add(LlsPlayer.GLOBAL);
+            joinMessageChannelList.add(LlsPlayer.SERVER);
+            joinMessageChannelList.add(LlsPlayer.GLOBAL);
+        }
     }
 }
