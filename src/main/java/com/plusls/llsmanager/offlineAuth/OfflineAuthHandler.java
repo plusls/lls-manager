@@ -38,7 +38,7 @@ public class OfflineAuthHandler {
         llsManager.autoRemovePlayers();
 
         // 如果别的插件阻止了，那就不需要做
-        if (event.getResult() != PreLoginEvent.PreLoginComponentResult.allowed()) {
+        if (!event.getResult().isAllowed()) {
             return;
         }
 
@@ -67,11 +67,15 @@ public class OfflineAuthHandler {
             event.setResult(PreLoginEvent.PreLoginComponentResult.denied(e.message));
             return;
         }
-        if (!llsPlayer.getOnlineMode()) {
-            event.setResult(PreLoginEvent.PreLoginComponentResult.forceOfflineMode());
-        } else {
-            event.setResult(PreLoginEvent.PreLoginComponentResult.forceOnlineMode());
+        // geyser 会强制设置为 offline mode，因此需要检查当前 result 是否为 default
+        if (event.getResult() == PreLoginEvent.PreLoginComponentResult.allowed()) {
+            if (!llsPlayer.getOnlineMode()) {
+                event.setResult(PreLoginEvent.PreLoginComponentResult.forceOfflineMode());
+            } else {
+                event.setResult(PreLoginEvent.PreLoginComponentResult.forceOnlineMode());
+            }
         }
+
 
         // 在这 put 的原因在于，在这会初始化 llsPlayer 的状态，在后续登录阶段需要使用
         llsManager.addLlsPlayer(event.getConnection(), llsPlayer);
