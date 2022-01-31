@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
@@ -26,6 +27,7 @@ import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 
 import java.util.Collections;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentSkipListSet;
 
@@ -60,7 +62,11 @@ public class LlsWhitelistCommand {
                             .suggests(this::getUsernameSuggestions)
                             .then(RequiredArgumentBuilder.<CommandSource, String>argument("serverName", StringArgumentType.string())
                                     .suggests(this::getServerNameSuggestions)
-                                    .executes(this)));
+                                    .executes(this)
+                                    .then(
+                                            RequiredArgumentBuilder.<CommandSource, String>argument("parameter", StringArgumentType.string())
+                                                    .executes(this)
+                                    )));
         }
 
         public CompletableFuture<Suggestions> getUsernameSuggestions(final CommandContext<CommandSource> context, final SuggestionsBuilder builder) {
@@ -79,20 +85,24 @@ public class LlsWhitelistCommand {
             LlsPlayer llsPlayer;
             try {
                 llsPlayer = llsManager.getLlsPlayer(username);
-            } catch (LoadPlayerFailException | PlayerNotFoundException e) {
+            } catch (LoadPlayerFailException e) {
                 return builder.buildFuture();
+            } catch (PlayerNotFoundException e) {
+                llsPlayer = new LlsPlayer(username, llsManager.dataFolderPath);
             }
+            LlsPlayer finalLlsPlayer = llsPlayer;
             llsManager.server.getAllServers().forEach(
                     registeredServer -> {
                         String serverName = registeredServer.getServerInfo().getName();
-                        if (serverName.contains(builder.getRemaining()) && !llsPlayer.getWhitelistServerList().contains(serverName)) {
+                        if (serverName.contains(builder.getRemaining()) && !finalLlsPlayer.getWhitelistServerList().contains(serverName)) {
                             builder.suggest(serverName);
                         }
                     }
             );
+            LlsPlayer finalLlsPlayer1 = llsPlayer;
             llsManager.config.getServerGroup().keySet().forEach(
                     serverGroup -> {
-                        if (serverGroup.contains(builder.getRemaining()) && !llsPlayer.getWhitelistServerList().contains(serverGroup)) {
+                        if (serverGroup.contains(builder.getRemaining()) && !finalLlsPlayer1.getWhitelistServerList().contains(serverGroup)) {
                             builder.suggest(serverGroup);
                         }
                     }
@@ -104,6 +114,12 @@ public class LlsWhitelistCommand {
         public int run(CommandContext<CommandSource> commandContext) {
             String username = commandContext.getArgument("username", String.class);
             String serverName = commandContext.getArgument("serverName", String.class);
+            String parameter;
+            try {
+                parameter = commandContext.getArgument("parameter", String.class);
+            } catch (Exception e) {
+                parameter = "";
+            }
             CommandSource source = commandContext.getSource();
             LlsPlayer llsPlayer;
             try {
@@ -116,6 +132,13 @@ public class LlsWhitelistCommand {
                 source.sendMessage(e.message);
                 return 0;
             } catch (PlayerNotFoundException e) {
+                if (!Objects.equals(parameter, "-c")) {
+                    source.sendMessage(Component.translatable("lls-manager.command.lls_whitelist.add.failure")
+                            .color(NamedTextColor.RED)
+                            .args(TextUtil.getServerAutoComponent(serverName), TextUtil.getUsernameComponent(username)));
+                    source.sendMessage(e.message);
+                    return 0;
+                }
                 llsPlayer = new LlsPlayer(username, llsManager.dataFolderPath);
                 if (llsPlayer.save()) {
                     llsManager.playerSet.add(username);
