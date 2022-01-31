@@ -137,6 +137,8 @@ public class LlsWhitelistCommand {
                             .color(NamedTextColor.RED)
                             .args(TextUtil.getServerAutoComponent(serverName), TextUtil.getUsernameComponent(username)));
                     source.sendMessage(e.message);
+                    source.sendMessage(Component.translatable("lls-manager.command.lls_whitelist.create_player.hint")
+                            .color(NamedTextColor.GOLD));
                     return 0;
                 }
                 llsPlayer = new LlsPlayer(username, llsManager.dataFolderPath);
